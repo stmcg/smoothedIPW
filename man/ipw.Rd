@@ -40,3 +40,14 @@ This function applies the pooled inverse probability weighted approach described
 \details{
 Additional description of the method
 }
+\examples{
+res <- ipw(data = data_null,
+           pooled = TRUE,
+           A_model = A ~ L + Z,
+           R_model_numerator = R ~ L0 + Z,
+           R_model_denominator = R ~ L + A + Z,
+           Y_model = Y ~ L0 * (t0 + Z))
+res$est_z0
+res$est_z1
+
+}

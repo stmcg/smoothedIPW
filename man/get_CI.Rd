@@ -30,6 +30,7 @@ This function applies nonparametric bootstrap to construct confidence intervals 
 Additional description of the method
 }
 \examples{
+\donttest{
 res_est <- ipw(data = data_null,
                pooled = TRUE,
                A_model = A ~ L + Z,
@@ -38,6 +39,7 @@ res_est <- ipw(data = data_null,
                Y_model = Y ~ L0 * (t0 + Z))
 res_ci <- get_CI(ipw_res = res_est, data = data_null, n_boot = 10)
 res_ci$res_dif
+}
 
 
 }

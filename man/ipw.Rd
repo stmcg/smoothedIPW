@@ -5,7 +5,7 @@
 \title{Pooled inverse probability weighting}
 \usage{
 ipw(
-  df,
+  data,
   pooled = TRUE,
   A_model,
   R_model_numerator,
@@ -15,7 +15,7 @@ ipw(
 )
 }
 \arguments{
-\item{df}{Data frame containing the observed data}
+\item{data}{Data frame containing the observed data}
 
 \item{pooled}{Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.}
 

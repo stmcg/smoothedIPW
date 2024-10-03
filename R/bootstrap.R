@@ -3,7 +3,7 @@
 #' This function applies nonparametric bootstrap to construct confidence intervals around the counterfactual mean estimates obtained by \code{\link{ipw}}.
 #'
 #' @param ipw_res Output from the \code{ipw} function.
-#' @param df Data frame containing the observed data
+#' @param data Data frame containing the observed data
 #' @param n_boot Numeric scalar specifying the number of bootstrap replicates to use
 #' @param conf_level Numeric scalar specifying the confidence level for the confidence intervals. The default is \code{0.95}.
 #'
@@ -19,17 +19,17 @@
 #'
 #' @export
 
-get_CI <- function(ipw_res, df, n_boot, conf_level = 0.95){
+get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
   time_points <- length(ipw_res$est_z0) - 1
   res_z0_boot_all <- res_z1_boot_all <- matrix(NA, nrow = n_boot, ncol = time_points + 1)
   for (i in 1:n_boot){
-    df_boot <- resample_data(df = df)
+    data_boot <- resample_data(data = data)
     ipw_res_boot <- ipw(A_model = eval(ipw_res$args$A_model),
                         R_model_numerator = eval(ipw_res$args$R_model_numerator),
                         R_model_denominator = eval(ipw_res$args$R_model_denominator),
                         Y_model = eval(ipw_res$args$Y_model),
                         pooled = ipw_res$args$pooled,
-                        df = df_boot,
+                        data = data_boot,
                         truncation_percentile = eval(ipw_res$args$truncation_percentile))
     res_z0_boot_all[i, ] <- ipw_res_boot$est_z0
     res_z1_boot_all[i, ] <- ipw_res_boot$est_z1
@@ -52,8 +52,8 @@ get_CI <- function(ipw_res, df, n_boot, conf_level = 0.95){
 }
 
 #' @import data.table
-resample_data <- function(df){
-  n_id <- length(unique(df$id))
+resample_data <- function(data){
+  n_id <- length(unique(data$id))
 
   # Sample IDs with replacement and call them new_id
   ids <- data.table::as.data.table(sample(1:n_id, n_id, replace = TRUE))
@@ -61,7 +61,7 @@ resample_data <- function(df){
   colnames(ids) <- c("id", "new_id")
 
   # Merge data set with new_id values with the original dataset
-  resample_data <- copy(df)
+  resample_data <- copy(data)
   setkey(resample_data, "id")
   resample_data <- resample_data[J(ids), allow.cartesian = TRUE]
   resample_data[, 'id' := resample_data$new_id]

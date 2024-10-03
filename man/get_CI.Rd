@@ -4,12 +4,12 @@
 \alias{get_CI}
 \title{Bootstrap-based confidence intervals}
 \usage{
-get_CI(ipw_res, df, n_boot, conf_level = 0.95)
+get_CI(ipw_res, data, n_boot, conf_level = 0.95)
 }
 \arguments{
 \item{ipw_res}{Output from the \code{ipw} function.}
 
-\item{df}{Data frame containing the observed data}
+\item{data}{Data frame containing the observed data}
 
 \item{n_boot}{Numeric scalar specifying the number of bootstrap replicates to use}
 

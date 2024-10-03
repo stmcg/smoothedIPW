@@ -17,11 +17,8 @@ get_CI(ipw_res, data, n_boot, conf_level = 0.95)
 }
 \value{
 A list that includes the following components:
-\item{res_dif}{A data frame containing the estimates and confidence intervals for the average treatment effect. The \eqn{k}th row corresponds to the \eqn{k}th time point.}
-\item{res_z0}{A data frame containing the estimates and confidence intervals for the counterfactual mean under \eqn{Z=0}. The \eqn{k}th row corresponds to the \eqn{k}th time point.}
-\item{res_z1}{A data frame containing the estimates and confidence intervals for the counterfactual mean under \eqn{Z=1}. The \eqn{k}th row corresponds to the \eqn{k}th time point.}
-\item{res_z0_boot_all}{A data frame containing the estimates of the counterfactual mean under \eqn{Z=0} in each bootstrap replicate. The columns correspond to the time points, and the rows correspond to the bootstrap replicates.}
-\item{res_z1_boot_all}{A data frame containing the estimates of the counterfactual mean under \eqn{Z=1} in each bootstrap replicate. The columns correspond to the time points, and the rows correspond to the bootstrap replicates.}
+\item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean under the treatment regime indexed by \eqn{z}.}
+\item{res_boot_all}{A three dimensional array containing all the bootstrap replicates. The first dimension corresponds to the bootstrap replicate; The second dimension corresponds to the time interval; The third dimension corresponds to the medication \eqn{z} level.}
 }
 \description{
 This function applies nonparametric bootstrap to construct confidence intervals around the counterfactual mean estimates obtained by \code{\link{ipw}}.
@@ -31,6 +28,7 @@ Additional description of the method
 }
 \examples{
 \donttest{
+set.seed(1234)
 res_est <- ipw(data = data_null,
                pooled = TRUE,
                A_model = A ~ L + Z,
@@ -38,7 +36,7 @@ res_est <- ipw(data = data_null,
                R_model_denominator = R ~ L + A + Z,
                Y_model = Y ~ L0 * (t0 + Z))
 res_ci <- get_CI(ipw_res = res_est, data = data_null, n_boot = 10)
-res_ci$res_dif
+res_ci$res_boot
 }
 
 

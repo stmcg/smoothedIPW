@@ -17,8 +17,8 @@ test_that("pooled ipw works", {
                      -0.07898498, -0.08317647, -0.08736795, -0.09155943, -0.09575092, -0.09994240, -0.10413388, -0.10832536,
                      -0.11251685)
 
-  expect_equal(res_pooled$est_z0, z0_est_expected, tolerance = 1e-7)
-  expect_equal(res_pooled$est_z1, z1_est_expected, tolerance = 1e-7)
+  expect_equal(res_pooled$est[, 'Z=0'], z0_est_expected, tolerance = 1e-7)
+  expect_equal(res_pooled$est[, 'Z=1'], z1_est_expected, tolerance = 1e-7)
 })
 
 test_that("nonpooled ipw works", {
@@ -39,6 +39,6 @@ test_that("nonpooled ipw works", {
                        0.925731463, -0.303373625,  0.068389502, -0.009483802,  0.391594133,  0.245451883, -0.241449398,
                        0.258538137,  0.018108352, -0.783299935,  0.309880043)
 
-  expect_equal(res_nonpooled$est_z0, z0_est_expected, tolerance = 1e-7)
-  expect_equal(res_nonpooled$est_z1, z1_est_expected, tolerance = 1e-7)
+  expect_equal(res_nonpooled$est[, 'Z=0'], z0_est_expected, tolerance = 1e-7)
+  expect_equal(res_nonpooled$est[, 'Z=1'], z1_est_expected, tolerance = 1e-7)
 })

@@ -81,17 +81,18 @@ res_est <- ipw(data = data_null,
                Y_model = Y ~ L0 * (t0 + Z))
 ```
 
-The estimated average treatment effect at each time point is given below.
+The estimated counterfactual outcome mean for each medication at each time point is given below.
 ```{r}
-res_est$est_z0 - res_est$est_z1
+res_est$est
 ```
-Note that the estimated average treatment effect is identical across all time points due to the lack of an interaction term between `t0` and `Z` in the outcome model.
+
 
 ###### Interval estimation
 
-To obtain 95\% confidence intervals around the estimated average treatment effects, we can apply the `get_CI` function. It constructs percentile-based bootstrap confidence intervals using `n_boot` bootstrap replicates. We use 10 bootstrap replicates for ease of computation.
+To obtain 95\% confidence intervals around the estimated counterfactual outcome means, we can apply the `get_CI` function. It constructs percentile-based bootstrap confidence intervals using `n_boot` bootstrap replicates. We use 10 bootstrap replicates for ease of computation.
 
 ```{r}
+set.seed(1234)
 res_ci <- get_CI(res_est, data = data_null, n_boot = 10)
-res_ci$res_dif
+res_ci$res_boot
 ```

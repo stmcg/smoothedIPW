@@ -11,8 +11,8 @@
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncated the IP weights
 #'
 #' @return A list that includes the following components:
-#' \item{est_z0}{A vector containing the counterfactual mean estimates under medication \eqn{Z=0}. The \eqn{k}th element in the vector corresponds to the \eqn{k}th follow-up time interval.}
-#' \item{est_z1}{A vector containing the counterfactual mean estimates under medication \eqn{Z=1}. The \eqn{k}th element in the vector corresponds to the \eqn{k}th follow-up time interval.}
+#' \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
+#' \item{args}{A list containing the arguments supplied to \code{ipw}, except the observed data set.}
 #'
 #' @details
 #' Additional description of the method
@@ -24,8 +24,7 @@
 #'            R_model_numerator = R ~ L0 + Z,
 #'            R_model_denominator = R ~ L + A + Z,
 #'            Y_model = Y ~ L0 * (t0 + Z))
-#' res$est_z0
-#' res$est_z1
+#' res$est
 #'
 #' @export
 
@@ -62,27 +61,36 @@ ipw <- function(data,
   }
 
   # Preparing data sets for estimating counterfactual outcome means
-  est_z0 <- est_z1 <- rep(NA, times = time_points + 1)
-  data_z0 <- data_z1 <- data[data$t0 == 0,]
-  data_z0$Z <- 0; data_z1$Z <- 1
+  z_levels <- unique(data$Z)
+  n_z <- length(z_levels)
+  est <- matrix(NA, nrow = time_points + 1, ncol = n_z + 1)
+  est[, 1] <- 0:time_points
+  colnames(est) <- c('time', paste0('Z=', z_levels))
+  data_baseline <- data[data$t0 == 0,]
 
   # Estimating counterfactual outcome means
   if (pooled){
     fit_Y <- stats::lm(formula = Y_model, data = data_censored, weights = weights)
     for (k in 0:time_points){
-      data_z0_temp <- data_z0; data_z0_temp$t0 <- k
-      data_z1_temp <- data_z1; data_z1_temp$t0 <- k
-      est_z0[k+1] <- mean(stats::predict(fit_Y, newdata = data_z0_temp))
-      est_z1[k+1] <- mean(stats::predict(fit_Y, newdata = data_z1_temp))
+      data_temp <- data_baseline; data_temp$t0 <- k
+      col_index <- 1
+      for (z_val in z_levels){
+        col_index <- col_index + 1
+        data_temp$Z <- z_val
+        est[k+1, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+      }
     }
   } else {
     for (k in 0:time_points){
       fit_Y <- stats::lm(Y_model, data = data_censored[data_censored$t0 == k,],
                          weights = weights)
-      data_z0_temp <- data_z0; data_z0_temp$t0 <- k
-      data_z1_temp <- data_z1; data_z1_temp$t0 <- k
-      est_z0[k+1] <- mean(stats::predict(fit_Y, newdata = data_z0_temp))
-      est_z1[k+1] <- mean(stats::predict(fit_Y, newdata = data_z1_temp))
+      data_temp <- data_baseline; data_temp$t0 <- k
+      col_index <- 1
+      for (z_val in z_levels){
+        col_index <- col_index + 1
+        data_temp$Z <- z_val
+        est[k+1, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+      }
     }
   }
 
@@ -90,6 +98,6 @@ ipw <- function(data,
   args <- as.list(match.call())[-1]
   args$data <- NULL
 
-  return(list(est_z0 = est_z0, est_z1 = est_z1, args = args))
+  return(list(est = est, args = args))
 }
 

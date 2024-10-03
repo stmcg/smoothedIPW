@@ -8,17 +8,15 @@
 #' @param conf_level Numeric scalar specifying the confidence level for the confidence intervals. The default is \code{0.95}.
 #'
 #' @return A list that includes the following components:
-#' \item{res_dif}{A data frame containing the estimates and confidence intervals for the average treatment effect. The \eqn{k}th row corresponds to the \eqn{k}th time point.}
-#' \item{res_z0}{A data frame containing the estimates and confidence intervals for the counterfactual mean under \eqn{Z=0}. The \eqn{k}th row corresponds to the \eqn{k}th time point.}
-#' \item{res_z1}{A data frame containing the estimates and confidence intervals for the counterfactual mean under \eqn{Z=1}. The \eqn{k}th row corresponds to the \eqn{k}th time point.}
-#' \item{res_z0_boot_all}{A data frame containing the estimates of the counterfactual mean under \eqn{Z=0} in each bootstrap replicate. The columns correspond to the time points, and the rows correspond to the bootstrap replicates.}
-#' \item{res_z1_boot_all}{A data frame containing the estimates of the counterfactual mean under \eqn{Z=1} in each bootstrap replicate. The columns correspond to the time points, and the rows correspond to the bootstrap replicates.}
+#' \item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean under the treatment regime indexed by \eqn{z}.}
+#' \item{res_boot_all}{A three dimensional array containing all the bootstrap replicates. The first dimension corresponds to the bootstrap replicate; The second dimension corresponds to the time interval; The third dimension corresponds to the medication \eqn{z} level.}
 #'
 #' @details
 #' Additional description of the method
 #'
 #' @examples
 #' \donttest{
+#' set.seed(1234)
 #' res_est <- ipw(data = data_null,
 #'                pooled = TRUE,
 #'                A_model = A ~ L + Z,
@@ -26,15 +24,19 @@
 #'                R_model_denominator = R ~ L + A + Z,
 #'                Y_model = Y ~ L0 * (t0 + Z))
 #' res_ci <- get_CI(ipw_res = res_est, data = data_null, n_boot = 10)
-#' res_ci$res_dif
+#' res_ci$res_boot
 #' }
 #'
 #'
 #' @export
 
 get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
-  time_points <- length(ipw_res$est_z0) - 1
-  res_z0_boot_all <- res_z1_boot_all <- matrix(NA, nrow = n_boot, ncol = time_points + 1)
+  time_points <- nrow(ipw_res$est) - 1
+  z_levels <- unique(data$Z)
+  n_z <- length(z_levels)
+
+  # Step 1: Perform bootstrapping
+  res_boot_all <- array(NA, dim = c(n_boot, time_points + 1, n_z))
   for (i in 1:n_boot){
     data_boot <- resample_data(data = data)
     ipw_res_boot <- ipw(A_model = eval(ipw_res$args$A_model),
@@ -44,24 +46,31 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
                         pooled = ipw_res$args$pooled,
                         data = data_boot,
                         truncation_percentile = eval(ipw_res$args$truncation_percentile))
-    res_z0_boot_all[i, ] <- ipw_res_boot$est_z0
-    res_z1_boot_all[i, ] <- ipw_res_boot$est_z1
+    for (j in 1:n_z){
+      res_boot_all[i, , j] <- ipw_res_boot$est[, paste0('Z=', z_levels[j])]
+    }
   }
 
-  res_dif <- res_z0 <- res_z1 <- matrix(NA, nrow = time_points + 1, ncol = 3)
-  res_dif[, 1] <- ipw_res$est_z0 - ipw_res$est_z1
-  res_z0[, 1] <- ipw_res$est_z0
-  res_z1[, 1] <- ipw_res$est_z1
-
+  # Step 2: Compute CI
   alpha <- 1 - conf_level
-  for (i in 1:(time_points + 1)){
-    res_dif[i, c(2, 3)] <- stats::quantile(res_z0_boot_all[, i] - res_z1_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
-    res_z0[i, c(2, 3)] <- stats::quantile(res_z0_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
-    res_z1[i, c(2, 3)] <- stats::quantile(res_z1_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
+  res_boot <- vector(mode = 'list', length = n_z)
+  for (j in 1:n_z){
+    res_boot_single <- matrix(NA, nrow = time_points + 1, ncol = 4)
+    colnames(res_boot_single) <- c('Time', 'Estimate', 'CI Lower', 'CI Upper')
+
+    z_val <- z_levels[j]
+    res_boot_z <- res_boot_all[, , j]
+
+    res_boot_single[, 1] <- ipw_res$est[, 1]
+    res_boot_single[, 2] <- ipw_res$est[, paste0('Z=', z_val)]
+
+    for (i in 1:(time_points + 1)){
+      res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2))
+    }
+    res_boot[[j]] <- res_boot_single
   }
-  colnames(res_dif) <- colnames(res_z0) <- colnames(res_z1) <- c('Estimate', 'CI Lower', 'CI Upper')
-  return(list(res_dif = res_dif, res_z0 = res_z0, res_z1 = res_z1,
-              res_z0_boot_all = res_z0_boot_all, res_z1_boot_all = res_z1_boot_all))
+  names(res_boot) <- z_levels
+  return(list(res_boot = res_boot, res_boot_all = res_boot_all))
 }
 
 #' @import data.table

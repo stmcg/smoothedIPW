@@ -1,0 +1,97 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# pooledipw
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The `pooledipw` package implements inverse probability weighted (IPW) methods to estimate effects of generalized time-varying treatment strategies on sparsely measured continuous outcomes in electronic health records (EHR) data. Specifically, this package implements pooled and nonpooled IPW methods as described in McGrath et al. (in preparation). 
+
+## Installation
+
+You can install the development version of `pooledipw` from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("stmcg/pooledipw")
+```
+
+## Example
+
+We first load the package.
+```{r}
+library(pooledipw)
+```
+
+We will estimate the effect of treatment strategies with the following three components:
+
+* Initiate medication $z$ ($z \in \{0, 1\}$) at baseline
+* Adhere to medication $z$ throughout the follow up, allowing for a grace period of 2 months
+* Ensure an outcome measurement at the follow-up time of interest
+
+#### Data Set 
+
+We will use the example data set `data_null` which contains longitudinal data on 1,000 individuals over 25 time points. This data set was generated so that the true average treatment effect is 0 at all time points. The data set `data_null` contains the following columns: 
+
+* `id`: Participant ID
+* `t0`: Follow-up time index
+* `L`: Time-varying covariate
+* `L0`: Baseline value of `L`
+* `Z`: Medication initiated at baseline
+* `A`: Adherence to the medication initiated at baseline
+* `R`: Indicator of outcome measurement
+* `Y`: Outcome
+
+The first 10 rows of `data_null` are: 
+```{r}
+data_null[1:10,]
+```
+
+#### Applying IPW
+
+###### Point estimation
+
+We will use the pooled IPW method, which is implemented in the `ipw` function. This method involves specifying the following models:
+
+* `A_model`: Treatment adherence model
+* `R_model_denominator`: Outcome measurement indicator model (used in the denominator of weights)
+* `R_model_numerator`: (Optional) Outcome measurement indicator model (used in the numerator of weights for stabilization)
+* `Y_model`: Outcome (marginal structural) model
+
+An example application of `ipw` is below:
+```{r}
+res_est <- ipw(data = data_null,
+               pooled = TRUE,
+               A_model = A ~ L + Z,
+               R_model_denominator = R ~ L + A + Z,
+               R_model_numerator = R ~ L0 + Z,
+               Y_model = Y ~ L0 * (t0 + Z))
+```
+
+The estimated average treatment effect at each time point is given below.
+```{r}
+res_est$est_z0 - res_est$est_z1
+```
+Note that the estimated average treatment effect is identical across all time points due to the lack of an interaction term between `t0` and `Z` in the outcome model.
+
+###### Interval estimation
+
+To obtain 95\% confidence intervals around the estimated average treatment effects, we can apply the `get_CI` function. It constructs percentile-based bootstrap confidence intervals using `n_boot` bootstrap replicates. We use 10 bootstrap replicates for ease of computation.
+
+```{r}
+res_ci <- get_CI(res_est, data = data_null, n_boot = 10)
+res_ci$res_dif
+```

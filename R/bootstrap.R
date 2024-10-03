@@ -42,20 +42,21 @@ get_CI <- function(ipw_res, df, n_boot, conf_level){
 
   alpha <- 1 - conf_level
   for (i in 1:(time_points + 1)){
-    res_dif[i, c(2, 3)] <- quantile(res_z0_boot_all[, i] - res_z1_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
-    res_z0[i, c(2, 3)] <- quantile(res_z0_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
-    res_z1[i, c(2, 3)] <- quantile(res_z1_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
+    res_dif[i, c(2, 3)] <- stats::quantile(res_z0_boot_all[, i] - res_z1_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
+    res_z0[i, c(2, 3)] <- stats::quantile(res_z0_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
+    res_z1[i, c(2, 3)] <- stats::quantile(res_z1_boot_all[, i], probs = c(alpha / 2, 1 - alpha / 2))
   }
   colnames(res_dif) <- colnames(res_z0) <- colnames(res_z1) <- c('Estimate', 'CI Lower', 'CI Upper')
   return(list(res_dif = res_dif, res_z0 = res_z0, res_z1 = res_z1,
               res_z0_boot_all = res_z0_boot_all, res_z1_boot_all = res_z1_boot_all))
 }
 
+#' @import data.table
 resample_data <- function(df){
   n_id <- length(unique(df$id))
 
   # Sample IDs with replacement and call them new_id
-  ids <- as.data.table(sample(1:n_id, n_id, replace = TRUE))
+  ids <- data.table::as.data.table(sample(1:n_id, n_id, replace = TRUE))
   ids[, 'new_id' := 1:n_id]
   colnames(ids) <- c("id", "new_id")
 

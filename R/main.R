@@ -30,24 +30,24 @@ ipw <- function(df,
   time_points <- max(df$t0)
 
   # Fit models for the nuisance functions
-  fit_A <- glm(A_model, family = 'binomial', data = df[df$G == 1,])
-  fit_R_denominator <- glm(R_model_denominator, family = 'binomial', data = df)
-  fit_R_numerator <- glm(R_model_numerator, family = 'binomial', data = df)
+  fit_A <- stats::glm(A_model, family = 'binomial', data = df[df$G == 1,])
+  fit_R_denominator <- stats::glm(R_model_denominator, family = 'binomial', data = df)
+  fit_R_numerator <- stats::glm(R_model_numerator, family = 'binomial', data = df)
 
   # Artificially censor individuals when they deviate from the treatment strategy
   df_censored <- df[df$C_artificial == 0,]
 
   # Compute IP weights based on censored data set
-  prob_A1 <- ifelse(df_censored$G == 1, predict(fit_A, type = 'response', newdata = df_censored), 1)
-  prob_R1_denominator <- predict(fit_R_denominator, type = 'response', newdata = df_censored)
-  prob_R1_numerator <- predict(fit_R_numerator, type = 'response', newdata = df_censored)
+  prob_A1 <- ifelse(df_censored$G == 1, stats::predict(fit_A, type = 'response', newdata = df_censored), 1)
+  prob_R1_denominator <- stats::predict(fit_R_denominator, type = 'response', newdata = df_censored)
+  prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = df_censored)
   weights_A <- unname(unlist(tapply(1 / prob_A1, df_censored$id, FUN = cumprod)))
   weights_R <- ifelse(df_censored$R == 1, prob_R1_numerator / prob_R1_denominator, 0)
   df_censored$weights <- weights_A * weights_R
 
   # Truncate IP weights, if applicable
   if (!is.null(truncation_percentile)){
-    trunc_val <- quantile(df_censored$weights, probs = truncation_percentile)
+    trunc_val <- stats::quantile(df_censored$weights, probs = truncation_percentile)
     df_censored$weights <- pmin(df_censored$weights, truncation_percentile)
   }
 
@@ -58,21 +58,21 @@ ipw <- function(df,
 
   # Estimating counterfactual outcome means
   if (pooled){
-    fit_Y <- lm(formula = Y_model, data = df_censored, weights = weights)
+    fit_Y <- stats::lm(formula = Y_model, data = df_censored, weights = weights)
     for (k in 0:time_points){
       df_z0_temp <- df_z0; df_z0_temp$t0 <- k
       df_z1_temp <- df_z1; df_z1_temp$t0 <- k
-      est_z0[k+1] <- mean(predict(fit_Y, newdata = df_z0_temp))
-      est_z1[k+1] <- mean(predict(fit_Y, newdata = df_z1_temp))
+      est_z0[k+1] <- mean(stats::predict(fit_Y, newdata = df_z0_temp))
+      est_z1[k+1] <- mean(stats::predict(fit_Y, newdata = df_z1_temp))
     }
   } else {
     for (k in 0:time_points){
-      fit_Y <- lm(Y_model, data = df_censored[df_censored$t0 == k,],
-                  weights = weights)
+      fit_Y <- stats::lm(Y_model, data = df_censored[df_censored$t0 == k,],
+                         weights = weights)
       df_z0_temp <- df_z0; df_z0_temp$t0 <- k
       df_z1_temp <- df_z1; df_z1_temp$t0 <- k
-      est_z0[k+1] <- mean(predict(fit_Y, newdata = df_z0_temp))
-      est_z1[k+1] <- mean(predict(fit_Y, newdata = df_z1_temp))
+      est_z0[k+1] <- mean(stats::predict(fit_Y, newdata = df_z0_temp))
+      est_z1[k+1] <- mean(stats::predict(fit_Y, newdata = df_z1_temp))
     }
   }
 

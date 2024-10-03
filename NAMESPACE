@@ -2,3 +2,4 @@
 
 export(get_CI)
 export(ipw)
+import(data.table)

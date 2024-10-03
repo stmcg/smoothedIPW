@@ -19,7 +19,7 @@
 #'
 #' @export
 
-get_CI <- function(ipw_res, df, n_boot, conf_level){
+get_CI <- function(ipw_res, df, n_boot, conf_level = 0.95){
   time_points <- length(ipw_res$est_z0) - 1
   res_z0_boot_all <- res_z1_boot_all <- matrix(NA, nrow = n_boot, ncol = time_points + 1)
   for (i in 1:n_boot){

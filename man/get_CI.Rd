@@ -4,7 +4,7 @@
 \alias{get_CI}
 \title{Bootstrap-based confidence intervals}
 \usage{
-get_CI(ipw_res, df, n_boot, conf_level)
+get_CI(ipw_res, df, n_boot, conf_level = 0.95)
 }
 \arguments{
 \item{ipw_res}{Output from the \code{ipw} function.}

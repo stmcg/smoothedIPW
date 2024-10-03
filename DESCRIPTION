@@ -19,3 +19,4 @@ Imports: data.table
 Depends: 
     R (>= 2.10)
 LazyData: true
+BugReports: https://github.com/stmcg/pooledipw

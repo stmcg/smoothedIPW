@@ -1,10 +1,12 @@
+data_null_processed <- prep_data(data_null, grace_period_length = 2, baseline_vars = 'L')
+
 test_that("pooled ipw works", {
-  res_pooled <- ipw(data = data_null,
+  res_pooled <- ipw(data = data_null_processed,
                     pooled = TRUE,
                     A_model = A ~ L + Z,
-                    R_model_numerator = R ~ L0 + Z,
+                    R_model_numerator = R ~ L_baseline + Z,
                     R_model_denominator = R ~ L + A + Z,
-                    Y_model = Y ~ L0 * (t0 + Z))
+                    Y_model = Y ~ L_baseline * (t0 + Z))
 
   z0_est_expected <- c(0.031534949,  0.027343466,  0.023151983,  0.018960500,  0.014769017,
                      0.010577534,  0.006386051,  0.002194568, -0.001996915, -0.006188398,
@@ -22,12 +24,12 @@ test_that("pooled ipw works", {
 })
 
 test_that("nonpooled ipw works", {
-  res_nonpooled <- ipw(data = data_null,
+  res_nonpooled <- ipw(data = data_null_processed,
                        pooled = FALSE,
                        A_model = A ~ L + Z,
-                       R_model_numerator = R ~ L0 + Z,
+                       R_model_numerator = R ~ L_baseline + Z,
                        R_model_denominator = R ~ L + A + Z,
-                       Y_model = Y ~ L0 * Z)
+                       Y_model = Y ~ L_baseline * Z)
 
   z0_est_expected <- c(0.109291117,  0.242196202,  0.791238126, -0.320970800,  0.692382888,  0.293595687,  0.169931201,
                        -0.334306817, -0.469619513,  0.811723956,  0.225452250, -0.251976811, -0.863918583,  0.365035448,

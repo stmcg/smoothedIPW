@@ -44,12 +44,11 @@ We will estimate the effect of treatment strategies with the following three com
 
 #### Data Set 
 
-We will use the example data set `data_null` which contains longitudinal data on 1,000 individuals over 25 time points. This data set was generated so that the true average treatment effect is 0 at all time points. The data set `data_null` contains the following columns: 
+We will use the example data set `data_null` which contains longitudinal data on 1,000 individuals over 25 time points. This data set was generated so that the treatment has no effect on the outcome at all time points. The data set `data_null` contains the following columns: 
 
 * `id`: Participant ID
 * `t0`: Follow-up time index
 * `L`: Time-varying covariate
-* `L0`: Baseline value of `L`
 * `Z`: Medication initiated at baseline
 * `A`: Adherence to the medication initiated at baseline
 * `R`: Indicator of outcome measurement
@@ -62,6 +61,23 @@ data_null[1:10,]
 
 #### Applying IPW
 
+###### Preparing the data set
+
+We first need to add some variables to the data set before applying inverse probability weighting. Specifically, we need to add:
+
+* `C_artificial`: An indicator specifying when an individual should be artificially censored from the data
+* `A_model_eligible`: An indicator specifying what records should be used for fitting the treatment adherence model
+
+We will also need to add columns for the baseline value of the time-varying covariates. In our case, we will add a column `L_baseline` for the baseline value of `L`.
+
+These columns can be added by the `prep_data` function, as shown below:
+```{r}
+data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
+                                 baseline_vars = 'L')
+data_null_processed[id == 2,]
+```
+
+
 ###### Point estimation
 
 We will use the pooled IPW method, which is implemented in the `ipw` function. This method involves specifying the following models:
@@ -73,12 +89,12 @@ We will use the pooled IPW method, which is implemented in the `ipw` function. T
 
 An example application of `ipw` is below:
 ```{r}
-res_est <- ipw(data = data_null,
+res_est <- ipw(data = data_null_processed,
                pooled = TRUE,
                A_model = A ~ L + Z,
                R_model_denominator = R ~ L + A + Z,
-               R_model_numerator = R ~ L0 + Z,
-               Y_model = Y ~ L0 * (t0 + Z))
+               R_model_numerator = R ~ L_baseline + Z,
+               Y_model = Y ~ L_baseline * (t0 + Z))
 ```
 
 The estimated counterfactual outcome mean for each medication at each time point is given below.
@@ -93,6 +109,6 @@ To obtain 95\% confidence intervals around the estimated counterfactual outcome 
 
 ```{r}
 set.seed(1234)
-res_ci <- get_CI(res_est, data = data_null, n_boot = 10)
+res_ci <- get_CI(res_est, data = data_null_processed, n_boot = 10)
 res_ci$res_boot
 ```

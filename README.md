@@ -42,13 +42,12 @@ three components:
 
 We will use the example data set `data_null` which contains longitudinal
 data on 1,000 individuals over 25 time points. This data set was
-generated so that the true average treatment effect is 0 at all time
+generated so that the treatment has no effect on the outcome at all time
 points. The data set `data_null` contains the following columns:
 
 - `id`: Participant ID
 - `t0`: Follow-up time index
 - `L`: Time-varying covariate
-- `L0`: Baseline value of `L`
 - `Z`: Medication initiated at baseline
 - `A`: Adherence to the medication initiated at baseline
 - `R`: Indicator of outcome measurement
@@ -58,21 +57,99 @@ The first 10 rows of `data_null` are:
 
 ``` r
 data_null[1:10,]
-#>        id    t0     L    L0     Z     A     R         Y C_artificial     G
-#>     <num> <int> <int> <int> <int> <num> <int>     <num>        <num> <num>
-#>  1:     1     0     1     1     0     1     0        NA            0     0
-#>  2:     1     1     0     1     0     1     0        NA            0     0
-#>  3:     1     2     1     1     0     1     0        NA            0     0
-#>  4:     1     3     0     1     0     1     0        NA            0     0
-#>  5:     1     4     0     1     0     1     1 -4.367446            0     0
-#>  6:     1     5     1     1     0     1     0        NA            0     0
-#>  7:     1     6     1     1     0     1     0        NA            0     0
-#>  8:     1     7     1     1     0     1     0        NA            0     0
-#>  9:     1     8     0     1     0     0     0        NA            0     0
-#> 10:     1     9     0     1     0     1     0        NA            0     0
+#>        id    t0     L     Z     A     R         Y
+#>     <num> <int> <int> <int> <num> <int>     <num>
+#>  1:     1     0     1     0     1     0        NA
+#>  2:     1     1     0     0     1     0        NA
+#>  3:     1     2     1     0     1     0        NA
+#>  4:     1     3     0     0     1     0        NA
+#>  5:     1     4     0     0     1     1 -4.367446
+#>  6:     1     5     1     0     1     0        NA
+#>  7:     1     6     1     0     1     0        NA
+#>  8:     1     7     1     0     1     0        NA
+#>  9:     1     8     0     0     0     0        NA
+#> 10:     1     9     0     0     1     0        NA
 ```
 
 #### Applying IPW
+
+###### Preparing the data set
+
+We first need to add some variables to the data set before applying
+inverse probability weighting. Specifically, we need to add:
+
+- `C_artificial`: An indicator specifying when an individual should be
+  artificially censored from the data
+- `A_model_eligible`: An indicator specifying what records should be
+  used for fitting the treatment adherence model
+
+We will also need to add columns for the baseline value of the
+time-varying covariates. In our case, we will add a column `L_baseline`
+for the baseline value of `L`.
+
+These columns can be added by the `prep_data` function, as shown below:
+
+``` r
+data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
+                                 baseline_vars = 'L')
+data_null_processed[id == 2,]
+#>        id    t0     L     Z     A     R           Y end_of_grace_period
+#>     <num> <int> <int> <int> <num> <int>       <num>               <int>
+#>  1:     2     0     1     0     1     1  -6.8964763                   0
+#>  2:     2     1     1     0     1     0          NA                   0
+#>  3:     2     2     1     0     1     1 -10.3900416                   0
+#>  4:     2     3     1     0     1     0          NA                   0
+#>  5:     2     4     1     0     1     0          NA                   0
+#>  6:     2     5     1     0     1     0          NA                   0
+#>  7:     2     6     1     0     0     0          NA                   0
+#>  8:     2     7     0     0     0     1  -4.2866350                   0
+#>  9:     2     8     1     0     0     1  11.3850700                   1
+#> 10:     2     9     0     0     1     0          NA                   0
+#> 11:     2    10     1     0     1     0          NA                   0
+#> 12:     2    11     0     0     1     0          NA                   0
+#> 13:     2    12     1     0     0     0          NA                   0
+#> 14:     2    13     1     0     1     0          NA                   0
+#> 15:     2    14     0     0     1     1  -3.6372290                   0
+#> 16:     2    15     1     0     1     1  -0.5293098                   0
+#> 17:     2    16     0     0     1     0          NA                   0
+#> 18:     2    17     1     0     0     0          NA                   0
+#> 19:     2    18     1     0     1     1  -2.9451809                   0
+#> 20:     2    19     1     0     1     0          NA                   0
+#> 21:     2    20     1     0     1     0          NA                   0
+#> 22:     2    21     1     0     1     1  -3.6248307                   0
+#> 23:     2    22     0     0     1     0          NA                   0
+#> 24:     2    23     1     0     1     0          NA                   0
+#> 25:     2    24     0     0     1     0          NA                   0
+#>        id    t0     L     Z     A     R           Y end_of_grace_period
+#>     A_model_eligible C_artificial L_baseline
+#>                <int>        <int>      <int>
+#>  1:                0            0          1
+#>  2:                0            0          1
+#>  3:                0            0          1
+#>  4:                0            0          1
+#>  5:                0            0          1
+#>  6:                0            0          1
+#>  7:                0            0          1
+#>  8:                0            0          1
+#>  9:                1            1          1
+#> 10:                0            1          1
+#> 11:                0            1          1
+#> 12:                0            1          1
+#> 13:                0            1          1
+#> 14:                0            1          1
+#> 15:                0            1          1
+#> 16:                0            1          1
+#> 17:                0            1          1
+#> 18:                0            1          1
+#> 19:                0            1          1
+#> 20:                0            1          1
+#> 21:                0            1          1
+#> 22:                0            1          1
+#> 23:                0            1          1
+#> 24:                0            1          1
+#> 25:                0            1          1
+#>     A_model_eligible C_artificial L_baseline
+```
 
 ###### Point estimation
 
@@ -89,12 +166,12 @@ function. This method involves specifying the following models:
 An example application of `ipw` is below:
 
 ``` r
-res_est <- ipw(data = data_null,
+res_est <- ipw(data = data_null_processed,
                pooled = TRUE,
                A_model = A ~ L + Z,
                R_model_denominator = R ~ L + A + Z,
-               R_model_numerator = R ~ L0 + Z,
-               Y_model = Y ~ L0 * (t0 + Z))
+               R_model_numerator = R ~ L_baseline + Z,
+               Y_model = Y ~ L_baseline * (t0 + Z))
 ```
 
 The estimated counterfactual outcome mean for each medication at each
@@ -139,7 +216,7 @@ replicates. We use 10 bootstrap replicates for ease of computation.
 
 ``` r
 set.seed(1234)
-res_ci <- get_CI(res_est, data = data_null, n_boot = 10)
+res_ci <- get_CI(res_est, data = data_null_processed, n_boot = 10)
 res_ci$res_boot
 #> $`0`
 #>       Time     Estimate   CI Lower   CI Upper

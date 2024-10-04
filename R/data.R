@@ -8,13 +8,10 @@
 #' \describe{
 #'   \item{t0}{Time index.}
 #'   \item{id}{Unique identifier for each individual.}
-#'   \item{L}{Binary covariate.}
-#'   \item{L0}{Baseline value of \code{L}.}
+#'   \item{L}{Binary time-varying covariate.}
 #'   \item{Z}{Medication initiated at baseline.}
 #'   \item{A}{Binary indicator of adhering to medication initiated at baseline.}
 #'   \item{R}{Indicator if the outcome of interest is measured.}
 #'   \item{Y}{Continuous outcome of interest.}
-#'   \item{C_artifial}{Indicator whether an individual is artificially censored.}
-#'   \item{G}{Indicator whether an individual is at the end of their grace period.}
 #' }
 "data_null"

@@ -41,12 +41,14 @@ This function applies the pooled inverse probability weighted approach described
 Additional description of the method
 }
 \examples{
-res <- ipw(data = data_null,
+data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
+                                 baseline_vars = 'L')
+res <- ipw(data = data_null_processed,
            pooled = TRUE,
            A_model = A ~ L + Z,
-           R_model_numerator = R ~ L0 + Z,
+           R_model_numerator = R ~ L_baseline + Z,
            R_model_denominator = R ~ L + A + Z,
-           Y_model = Y ~ L0 * (t0 + Z))
+           Y_model = Y ~ L_baseline * (t0 + Z))
 res$est
 
 }

@@ -2,4 +2,5 @@
 
 export(get_CI)
 export(ipw)
+export(prep_data)
 import(data.table)

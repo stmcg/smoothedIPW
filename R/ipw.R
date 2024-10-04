@@ -18,12 +18,14 @@
 #' Additional description of the method
 #'
 #' @examples
-#' res <- ipw(data = data_null,
+#' data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
+#'                                  baseline_vars = 'L')
+#' res <- ipw(data = data_null_processed,
 #'            pooled = TRUE,
 #'            A_model = A ~ L + Z,
-#'            R_model_numerator = R ~ L0 + Z,
+#'            R_model_numerator = R ~ L_baseline + Z,
 #'            R_model_denominator = R ~ L + A + Z,
-#'            Y_model = Y ~ L0 * (t0 + Z))
+#'            Y_model = Y ~ L_baseline * (t0 + Z))
 #' res$est
 #'
 #' @export
@@ -39,7 +41,7 @@ ipw <- function(data,
   time_points <- max(data$t0)
 
   # Fit models for the nuisance functions
-  fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$G == 1,])
+  fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,])
   fit_R_denominator <- stats::glm(R_model_denominator, family = 'binomial', data = data)
   fit_R_numerator <- stats::glm(R_model_numerator, family = 'binomial', data = data)
 
@@ -47,7 +49,7 @@ ipw <- function(data,
   data_censored <- data[data$C_artificial == 0,]
 
   # Compute IP weights based on censored data set
-  prob_A1 <- ifelse(data_censored$G == 1, stats::predict(fit_A, type = 'response', newdata = data_censored), 1)
+  prob_A1 <- ifelse(data_censored$A_model_eligible == 1, stats::predict(fit_A, type = 'response', newdata = data_censored), 1)
   prob_R1_denominator <- stats::predict(fit_R_denominator, type = 'response', newdata = data_censored)
   prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = data_censored)
   weights_A <- unname(unlist(tapply(1 / prob_A1, data_censored$id, FUN = cumprod)))

@@ -5,6 +5,8 @@
 #' @param data Data frame containing the observed data
 #' @param grace_period_length Numeric scalar indicating the length of the grace period, if applicable. The default is \code{0}, indicating no grace period.
 #' @param baseline_vars Vector of character strings specifying the names of the baseline covariates that should be added to the observed data.
+#' @param lag_vars Vector of character strings specifying the names of the covariates whose lags should be added as columns to the observed data. The number of lags is controlled by the \code{n_lags} argument.
+#' @param n_lags Numeric scalar specifying the number of lags to use when computing the lagged values of \code{lag_vars}. Additional columns will be created for 1, ..., \code{n_lags} lags of the variables specified in \code{lag_vars}.
 #'
 #' @return A data table containing the observed data with the additional columns.
 #'
@@ -23,7 +25,9 @@
 #'
 #' @export
 prep_data <- function(data, grace_period_length = 0,
-                      baseline_vars = NULL){
+                      baseline_vars = NULL,
+                      lag_vars = NULL,
+                      n_lags = 1){
 
   # Inefficient version of the code
   # data[, C_artificial := 0]
@@ -78,6 +82,20 @@ prep_data <- function(data, grace_period_length = 0,
     }
     for (var in baseline_vars){
       data[, paste0(var, '_baseline') := get(var)[t0 == 0], by = id]
+    }
+  }
+
+  # Adding lagged covariates
+  if (!is.null(lag_vars)){
+    if (!all(lag_vars %in% colnames(data))){
+      stop('Some variables in lag_vars do not exist in data')
+    }
+    for (var in lag_vars){
+      for (lag in 1:n_lags) {
+        lagged_col_name <- paste0(var, "_lag", lag)
+        data[, (lagged_col_name) := shift(get(var), n = lag, type = "lag"), by = id]
+        data[is.na(get(lagged_col_name)), (lagged_col_name) := 0]
+      }
     }
   }
   return(data)

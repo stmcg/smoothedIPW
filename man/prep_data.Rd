@@ -4,7 +4,13 @@
 \alias{prep_data}
 \title{Prepare data set for inverse probability weighting}
 \usage{
-prep_data(data, grace_period_length = 0, baseline_vars = NULL)
+prep_data(
+  data,
+  grace_period_length = 0,
+  baseline_vars = NULL,
+  lag_vars = NULL,
+  n_lags = 1
+)
 }
 \arguments{
 \item{data}{Data frame containing the observed data}
@@ -12,6 +18,10 @@ prep_data(data, grace_period_length = 0, baseline_vars = NULL)
 \item{grace_period_length}{Numeric scalar indicating the length of the grace period, if applicable. The default is \code{0}, indicating no grace period.}
 
 \item{baseline_vars}{Vector of character strings specifying the names of the baseline covariates that should be added to the observed data.}
+
+\item{lag_vars}{Vector of character strings specifying the names of the covariates whose lags should be added as columns to the observed data. The number of lags is controlled by the \code{n_lags} argument.}
+
+\item{n_lags}{Numeric scalar specifying the number of lags to use when computing the lagged values of \code{lag_vars}. Additional columns will be created for 1, ..., \code{n_lags} lags of the variables specified in \code{lag_vars}.}
 }
 \value{
 A data table containing the observed data with the additional columns.

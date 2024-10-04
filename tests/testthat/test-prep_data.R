@@ -12,6 +12,7 @@ datagen <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, sigm
   L0 <- rep(NA, time_points+1)
   Z <- rep(NA, time_points+1)
   A <- rep(NA, time_points+1)
+  lag1_A <- rep(NA, time_points+1)
   R <- rep(NA, time_points+1)
   Y <- rep(NA, time_points+1)
   C_artificial <- rep(NA, time_points+1)
@@ -29,6 +30,7 @@ datagen <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, sigm
     Y[1] <- rnorm(1, beta_Y[1] + beta_Y[2] * A[1] + beta_Y[3] * Z[1] + beta_Y[4] * L[1] + beta_Y[5] * U[1] +
                     beta_Y[6] * Z[1] * A[1] + beta_Y[7] * Z[1] * L[1] + beta_Y[8] * L[1] * A[1], sigma_Y)
   }
+  lag1_A[1] <- 0
   C_artificial[1] <- ifelse(A[1] == 0, 1, 0)
   count_not_adhered <- 0
   G[1] <- 0
@@ -51,11 +53,12 @@ datagen <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, sigm
     } else {
       C_artificial[j] <- 0
     }
+    lag1_A[j] <- A[j-1]
   }
 
   # Consolidate data in a single data frame
   temp_data <- data.table(id = id, t0 = t0, L = L, L0 = L0, Z = Z,
-                          A = A, R = R, Y = Y, C_artificial = C_artificial, G = G)
+                          A = A, lag1_A = lag1_A, R = R, Y = Y, C_artificial = C_artificial, G = G)
   return(temp_data)
 }
 
@@ -75,10 +78,12 @@ data_null_temp <- lapply(as.list(1:1000), FUN=function(ind){
 })
 data_null_full <- rbindlist(data_null_temp)
 data_null_processed <- prep_data(data_null, grace_period_length = 2,
-                                 baseline_vars = 'L')
+                                 baseline_vars = 'L',
+                                 lag_vars = 'A')
 
 test_that("prep_data works", {
   expect_equal(data_null_processed$C_artificial, data_null_full$C_artificial, tolerance = 1e-7)
   expect_equal(data_null_processed$A_model_eligible, data_null_full$G, tolerance = 1e-7)
+  expect_equal(data_null_processed$A_lag1, data_null_full$lag1_A, tolerance = 1e-7)
 })
 

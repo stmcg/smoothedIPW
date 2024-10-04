@@ -73,6 +73,9 @@ prep_data <- function(data, grace_period_length = 0,
 
   # Adding baseline covariates
   if (!is.null(baseline_vars)){
+    if (!all(baseline_vars %in% colnames(data))){
+      stop('Some variables in baseline_vars do not exist in data')
+    }
     for (var in baseline_vars){
       data[, paste0(var, '_baseline') := get(var)[t0 == 0], by = id]
     }

@@ -44,3 +44,13 @@ test_that("nonpooled ipw works", {
   expect_equal(res_nonpooled$est[, 'Z=0'], z0_est_expected, tolerance = 1e-7)
   expect_equal(res_nonpooled$est[, 'Z=1'], z1_est_expected, tolerance = 1e-7)
 })
+
+
+test_that("pooled ipw doesn't fail with weight truncation and without stabilization", {
+  expect_no_error(ipw(data = data_null_processed,
+                      pooled = TRUE,
+                      A_model = A ~ L + Z,
+                      R_model_denominator = R ~ L + A + Z,
+                      Y_model = Y ~ L_baseline * (t0 + Z),
+                      truncation_percentile = 0.99))
+})

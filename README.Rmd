@@ -101,7 +101,7 @@ res_est <- ipw(data = data_null_processed,
 
 The estimated counterfactual outcome mean for each medication at each time point is given below.
 ```{r}
-res_est$est
+res_est
 ```
 
 

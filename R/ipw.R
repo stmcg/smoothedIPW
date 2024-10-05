@@ -11,7 +11,7 @@
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncated the IP weights
 #' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output
 #'
-#' @return A list that includes the following components:
+#' @return A object of class "ipw". This object is a list that includes the following components:
 #' \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
 #' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE})}
 #' \item{args}{A list containing the arguments supplied to \code{ipw}, except the observed data set.}
@@ -151,7 +151,9 @@ ipw <- function(data,
   } else {
     model_fits <- NULL
   }
+  out <- list(est = as.data.frame(est), args = args, model_fits = model_fits)
+  class(out) <- 'ipw'
 
-  return(list(est = est, args = args, model_fits = model_fits))
+  return(out)
 }
 

@@ -55,7 +55,8 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
                         Y_model = eval(ipw_res$args$Y_model),
                         pooled = ipw_res$args$pooled,
                         data = data_boot,
-                        truncation_percentile = eval(ipw_res$args$truncation_percentile))
+                        truncation_percentile = eval(ipw_res$args$truncation_percentile),
+                        return_model_fits = FALSE)
     for (j in 1:n_z){
       res_boot_all[i, , j] <- ipw_res_boot$est[, paste0('Z=', z_levels[j])]
     }

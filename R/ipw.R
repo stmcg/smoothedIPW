@@ -9,9 +9,11 @@
 #' @param R_model_denominator Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights
 #' @param Y_model Model statement for the outcome variable
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncated the IP weights
+#' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output
 #'
 #' @return A list that includes the following components:
 #' \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
+#' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE})}
 #' \item{args}{A list containing the arguments supplied to \code{ipw}, except the observed data set.}
 #'
 #' @details
@@ -36,7 +38,8 @@ ipw <- function(data,
                 R_model_numerator,
                 R_model_denominator,
                 Y_model,
-                truncation_percentile = NULL){
+                truncation_percentile = NULL,
+                return_model_fits = TRUE){
   # Check input
   if (missing(data)){
     stop('The argument data must be specified')
@@ -64,6 +67,8 @@ ipw <- function(data,
   fit_R_denominator <- stats::glm(R_model_denominator, family = 'binomial', data = data)
   if (!missing(R_model_numerator)){
     fit_R_numerator <- stats::glm(R_model_numerator, family = 'binomial', data = data)
+  } else {
+    fit_R_numerator <- NULL
   }
 
   # Artificially censor individuals when they deviate from the treatment strategy
@@ -108,6 +113,9 @@ ipw <- function(data,
       }
     }
   } else {
+    if (return_model_fits){
+      fit_Y_all <- vector(mode = "list", length = time_points + 1)
+    }
     for (k in 0:time_points){
       fit_Y <- stats::lm(Y_model, data = data_censored[data_censored$t0 == k,],
                          weights = weights)
@@ -118,6 +126,9 @@ ipw <- function(data,
         data_temp$Z <- z_val
         est[k+1, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
       }
+      if (return_model_fits){
+        fit_Y_all[[k+1]] <- fit_Y
+      }
     }
   }
 
@@ -125,6 +136,22 @@ ipw <- function(data,
   args <- as.list(match.call())[-1]
   args$data <- NULL
 
-  return(list(est = est, args = args))
+  if (return_model_fits){
+    if (pooled){
+      model_fits <- list(fit_A = fit_A,
+                         fit_R_denominator = fit_R_denominator,
+                         fit_R_numerator = fit_R_numerator,
+                         fit_Y = fit_Y)
+    } else {
+      model_fits <- list(fit_A = fit_A,
+                         fit_R_denominator = fit_R_denominator,
+                         fit_R_numerator = fit_R_numerator,
+                         fit_Y = fit_Y_all)
+    }
+  } else {
+    model_fits <- NULL
+  }
+
+  return(list(est = est, args = args, model_fits = model_fits))
 }
 

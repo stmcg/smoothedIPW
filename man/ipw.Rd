@@ -11,7 +11,8 @@ ipw(
   R_model_numerator,
   R_model_denominator,
   Y_model,
-  truncation_percentile = NULL
+  truncation_percentile = NULL,
+  return_model_fits = TRUE
 )
 }
 \arguments{
@@ -28,10 +29,13 @@ ipw(
 \item{Y_model}{Model statement for the outcome variable}
 
 \item{truncation_percentile}{Numerical scalar specifying the percentile by which to truncated the IP weights}
+
+\item{return_model_fits}{Logical scalar specifying whether to include the fitted models in the output}
 }
 \value{
 A list that includes the following components:
 \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
+\item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE})}
 \item{args}{A list containing the arguments supplied to \code{ipw}, except the observed data set.}
 }
 \description{

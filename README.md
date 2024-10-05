@@ -71,6 +71,11 @@ data_null[1:10,]
 #> 10:     1     9     0     0     1     0        NA
 ```
 
+The package generally expects users to follow these naming conventions
+for the columns of the observed data set. The columns for the
+time-varying covariate(s) are an exception to this, which can take on
+any names.
+
 #### Applying IPW
 
 ###### Preparing the data set

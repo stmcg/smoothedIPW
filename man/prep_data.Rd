@@ -27,14 +27,15 @@ prep_data(
 A data table containing the observed data with the additional columns.
 }
 \description{
-This function adds columns to the input data set to assistant with inverse probability weighting. See details.
+This function adds columns to the input data set to assist with inverse probability weighting. See details.
 }
 \details{
 This function performs the following tasks:
 \itemize{
-\item Adds a column \code{C_artificial} which indicates when an individual should be artificially censored from the data when applying inverse probability weighting
-\item Adds a column \code{A_model_eligible} which indicates what records should be used for fitting the treatment adherence model
-\item If \code{baseline_vars} is supplied, it adds columns corresponding to the baseline value of these covariates. These columns have the name \code{_baseline} appended to them.
+\item Adds a column \code{C_artificial} which indicates when an individual should be artificially censored from the data when applying inverse probability weighting.
+\item Adds a column \code{A_model_eligible} which indicates what records should be used for fitting the treatment adherence model.
+\item If \code{baseline_vars} is supplied, it adds columns corresponding to the baseline value of these variables These columns have the name \code{_baseline} appended to them.
+\item If \code{lag_vars} is supplied, it adds columns corresponding to the lagged value of these variables. For each of these variables, additional columns will be created for 1, ..., \code{n_lags} lags of the variable.
 }
 }
 \examples{

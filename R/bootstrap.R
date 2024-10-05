@@ -33,6 +33,14 @@
 #' @export
 
 get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
+  # Check input
+  if (missing(n_boot)){
+    stop('The argument n_boot must be specified')
+  }
+  if (conf_level < 0 | conf_level > 1){
+    stop('conf_level must be between 0 and 1')
+  }
+
   time_points <- nrow(ipw_res$est) - 1
   z_levels <- unique(data$Z)
   n_z <- length(z_levels)

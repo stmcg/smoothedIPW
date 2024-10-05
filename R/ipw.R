@@ -37,13 +37,34 @@ ipw <- function(data,
                 R_model_denominator,
                 Y_model,
                 truncation_percentile = NULL){
+  # Check input
+  if (missing(data)){
+    stop('The argument data must be specified')
+  }
+  if (missing(A_model)){
+    stop('The argument A_model must be specified')
+  }
+  if (missing(R_model_denominator)){
+    stop('The argument R_model_denominator must be specified')
+  }
+  if (missing(Y_model)){
+    stop('The argument Y_model must be specified')
+  }
+  if (!is.null(truncation_percentile)){
+    if (truncation_percentile < 0 | truncation_percentile > 1){
+      stop('The argument truncation_percentile must be beween 0 and 1')
+    }
+  }
+
   # Set parameters
   time_points <- max(data$t0)
 
   # Fit models for the nuisance functions
   fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,])
   fit_R_denominator <- stats::glm(R_model_denominator, family = 'binomial', data = data)
-  fit_R_numerator <- stats::glm(R_model_numerator, family = 'binomial', data = data)
+  if (!missing(R_model_numerator)){
+    fit_R_numerator <- stats::glm(R_model_numerator, family = 'binomial', data = data)
+  }
 
   # Artificially censor individuals when they deviate from the treatment strategy
   data_censored <- data[data$C_artificial == 0,]
@@ -51,7 +72,11 @@ ipw <- function(data,
   # Compute IP weights based on censored data set
   prob_A1 <- ifelse(data_censored$A_model_eligible == 1, stats::predict(fit_A, type = 'response', newdata = data_censored), 1)
   prob_R1_denominator <- stats::predict(fit_R_denominator, type = 'response', newdata = data_censored)
-  prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = data_censored)
+  if (!missing(R_model_numerator)){
+    prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = data_censored)
+  } else {
+    prob_R1_numerator <- rep(1, times = nrow(data_censored))
+  }
   weights_A <- unname(unlist(tapply(1 / prob_A1, data_censored$id, FUN = cumprod)))
   weights_R <- ifelse(data_censored$R == 1, prob_R1_numerator / prob_R1_denominator, 0)
   data_censored$weights <- weights_A * weights_R

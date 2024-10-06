@@ -29,7 +29,7 @@
 #'            A_model = A ~ L + Z,
 #'            R_model_numerator = R ~ L_baseline + Z,
 #'            R_model_denominator = R ~ L + A + Z,
-#'            Y_model = Y ~ L_baseline * (t0 + Z))
+#'            Y_model = Y ~ L_baseline * (time + Z))
 #' res$est
 #'
 #' @export
@@ -64,7 +64,7 @@ ipw <- function(data,
 
   # Set parameters
   if (missing(outcome_times)){
-    outcome_times <- 0:max(data$t0)
+    outcome_times <- 0:max(data$time)
   }
   time_points <- length(outcome_times)
 
@@ -104,7 +104,7 @@ ipw <- function(data,
   est <- matrix(NA, nrow = time_points, ncol = n_z + 1)
   est[, 1] <- outcome_times
   colnames(est) <- c('time', paste0('Z=', z_levels))
-  data_baseline <- data[data$t0 == 0,]
+  data_baseline <- data[data$time == 0,]
 
   # Estimating counterfactual outcome means
   row_index <- 0
@@ -112,7 +112,7 @@ ipw <- function(data,
     fit_Y <- stats::lm(formula = Y_model, data = data_censored, weights = weights)
     for (k in outcome_times){
       row_index <- row_index + 1
-      data_temp <- data_baseline; data_temp$t0 <- k
+      data_temp <- data_baseline; data_temp$time <- k
       col_index <- 1
       for (z_val in z_levels){
         col_index <- col_index + 1
@@ -126,9 +126,9 @@ ipw <- function(data,
     }
     for (k in outcome_times){
       row_index <- row_index + 1
-      fit_Y <- stats::lm(Y_model, data = data_censored[data_censored$t0 == k,],
+      fit_Y <- stats::lm(Y_model, data = data_censored[data_censored$time == k,],
                          weights = weights)
-      data_temp <- data_baseline; data_temp$t0 <- k
+      data_temp <- data_baseline; data_temp$time <- k
       col_index <- 1
       for (z_val in z_levels){
         col_index <- col_index + 1

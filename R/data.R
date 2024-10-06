@@ -6,7 +6,7 @@
 #'
 #' @format A data table with 25,000 rows and 7 variables:
 #' \describe{
-#'   \item{t0}{Time index.}
+#'   \item{time}{Time index.}
 #'   \item{id}{Unique identifier for each individual.}
 #'   \item{L}{Binary time-varying covariate.}
 #'   \item{Z}{Medication initiated at baseline.}

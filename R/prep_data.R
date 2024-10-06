@@ -34,7 +34,7 @@ prep_data <- function(data, grace_period_length = 0,
   # data[, C_artificial := 0]
   # data[, end_of_grace_period := 0]
   # for(i in 1:nrow(data)){
-  #   if (data[i, 't0'] == 0){
+  #   if (data[i, 'time'] == 0){
   #     # Baseline
   #     count_not_adhered_until_now <- 0
   #   } else {
@@ -58,7 +58,7 @@ prep_data <- function(data, grace_period_length = 0,
     data[, count_not_adhered_until_now := {
       count_vector <- numeric(.N)
       for (i in 2:.N) {
-        if (t0[i] > 0) {
+        if (time[i] > 0) {
           count_vector[i] <- (count_vector[i - 1] + 1) * (1 - A[i - 1])
         }
       }
@@ -68,7 +68,7 @@ prep_data <- function(data, grace_period_length = 0,
     data[, count_not_adhered_until_now := NULL]
     data[, A_model_eligible := end_of_grace_period]
   } else {
-    data[, A_model_eligible := as.integer(t0 > 0)]
+    data[, A_model_eligible := as.integer(time > 0)]
   }
 
   # Adding indicator of artificial censoring
@@ -82,7 +82,7 @@ prep_data <- function(data, grace_period_length = 0,
       stop('Some variables in baseline_vars do not exist in data')
     }
     for (var in baseline_vars){
-      data[, paste0(var, '_baseline') := get(var)[t0 == 0], by = id]
+      data[, paste0(var, '_baseline') := get(var)[time == 0], by = id]
     }
   }
 

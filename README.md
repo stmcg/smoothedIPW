@@ -49,7 +49,7 @@ generated so that the treatment has no effect on the outcome at all time
 points. The data set `data_null` contains the following columns:
 
 - `id`: Participant ID
-- `t0`: Follow-up time index
+- `time`: Follow-up time index
 - `L`: Time-varying covariate
 - `Z`: Medication initiated at baseline
 - `A`: Adherence to the medication initiated at baseline
@@ -60,7 +60,7 @@ The first 10 rows of `data_null` are:
 
 ``` r
 data_null[1:10,]
-#>        id    t0     L     Z     A     R         Y
+#>        id  time     L     Z     A     R         Y
 #>     <num> <int> <int> <int> <num> <int>     <num>
 #>  1:     1     0     1     0     1     0        NA
 #>  2:     1     1     0     0     1     0        NA
@@ -101,7 +101,7 @@ These columns can be added by the `prep_data` function, as shown below:
 data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
 data_null_processed[id == 2,]
-#>        id    t0     L     Z     A     R           Y end_of_grace_period
+#>        id  time     L     Z     A     R           Y end_of_grace_period
 #>     <num> <int> <int> <int> <num> <int>       <num>               <int>
 #>  1:     2     0     1     0     1     1  -6.8964763                   0
 #>  2:     2     1     1     0     1     0          NA                   0
@@ -128,7 +128,7 @@ data_null_processed[id == 2,]
 #> 23:     2    22     0     0     1     0          NA                   0
 #> 24:     2    23     1     0     1     0          NA                   0
 #> 25:     2    24     0     0     1     0          NA                   0
-#>        id    t0     L     Z     A     R           Y end_of_grace_period
+#>        id  time     L     Z     A     R           Y end_of_grace_period
 #>     A_model_eligible C_artificial L_baseline
 #>                <int>        <int>      <int>
 #>  1:                0            0          1
@@ -180,7 +180,7 @@ res_est <- ipw(data = data_null_processed,
                A_model = A ~ L + Z,
                R_model_denominator = R ~ L + A + Z,
                R_model_numerator = R ~ L_baseline + Z,
-               Y_model = Y ~ L_baseline * (t0 + Z))
+               Y_model = Y ~ L_baseline * (time + Z))
 ```
 
 The estimated counterfactual outcome mean for each medication at each

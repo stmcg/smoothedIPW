@@ -6,7 +6,7 @@ expit <- function(x) {
 
 datagen <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, sigma_Y, U_lb, U_ub, m){
   # Preallocate space in vectors
-  t0 <- 0:time_points
+  time <- 0:time_points
   id <- rep(as.numeric(i), time_points+1)
   L <- rep(NA, time_points+1)
   L0 <- rep(NA, time_points+1)
@@ -57,7 +57,7 @@ datagen <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, sigm
   }
 
   # Consolidate data in a single data frame
-  temp_data <- data.table(id = id, t0 = t0, L = L, L0 = L0, Z = Z,
+  temp_data <- data.table(id = id, time = time, L = L, L0 = L0, Z = Z,
                           A = A, lag1_A = lag1_A, R = R, Y = Y, C_artificial = C_artificial, G = G)
   return(temp_data)
 }

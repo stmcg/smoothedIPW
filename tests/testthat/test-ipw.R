@@ -6,7 +6,7 @@ test_that("pooled ipw works", {
                     A_model = A ~ L + Z,
                     R_model_numerator = R ~ L_baseline + Z,
                     R_model_denominator = R ~ L + A + Z,
-                    Y_model = Y ~ L_baseline * (t0 + Z))
+                    Y_model = Y ~ L_baseline * (time + Z))
 
   z0_est_expected <- c(0.031534949,  0.027343466,  0.023151983,  0.018960500,  0.014769017,
                      0.010577534,  0.006386051,  0.002194568, -0.001996915, -0.006188398,
@@ -51,6 +51,6 @@ test_that("pooled ipw doesn't fail with weight truncation and without stabilizat
                       pooled = TRUE,
                       A_model = A ~ L + Z,
                       R_model_denominator = R ~ L + A + Z,
-                      Y_model = Y ~ L_baseline * (t0 + Z),
+                      Y_model = Y ~ L_baseline * (time + Z),
                       truncation_percentile = 0.99))
 })

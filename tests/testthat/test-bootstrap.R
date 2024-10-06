@@ -6,7 +6,7 @@ test_that("pooled ipw CI doesn't fail", {
                     A_model = A ~ L + Z,
                     R_model_numerator = R ~ L_baseline + Z,
                     R_model_denominator = R ~ L + A + Z,
-                    Y_model = Y ~ L_baseline * (t0 + Z))
+                    Y_model = Y ~ L_baseline * (time + Z))
   expect_no_error(get_CI(ipw_res = res_pooled, data = data_null_processed, n_boot = 5))
 })
 

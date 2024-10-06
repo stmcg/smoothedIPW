@@ -21,6 +21,7 @@
 #'                                  baseline_vars = 'L')
 #' res_est <- ipw(data = data_null_processed,
 #'                pooled = TRUE,
+#'                outcome_times = c(6, 12, 18, 24),
 #'                A_model = A ~ L + Z,
 #'                R_model_numerator = R ~ L_baseline + Z,
 #'                R_model_denominator = R ~ L + A + Z,
@@ -41,20 +42,22 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
     stop('conf_level must be between 0 and 1')
   }
 
-  time_points <- nrow(ipw_res$est) - 1
+  outcome_times <- eval(ipw_res$args$outcome_times)
+  time_points <- length(outcome_times)
   z_levels <- unique(data$Z)
   n_z <- length(z_levels)
 
   # Step 1: Perform bootstrapping
-  res_boot_all <- array(NA, dim = c(n_boot, time_points + 1, n_z))
+  res_boot_all <- array(NA, dim = c(n_boot, time_points, n_z))
   for (i in 1:n_boot){
     data_boot <- resample_data(data = data)
-    ipw_res_boot <- ipw(A_model = eval(ipw_res$args$A_model),
+    ipw_res_boot <- ipw(data = data_boot,
+                        pooled = ipw_res$args$pooled,
+                        outcome_times = outcome_times,
+                        A_model = eval(ipw_res$args$A_model),
                         R_model_numerator = eval(ipw_res$args$R_model_numerator),
                         R_model_denominator = eval(ipw_res$args$R_model_denominator),
                         Y_model = eval(ipw_res$args$Y_model),
-                        pooled = ipw_res$args$pooled,
-                        data = data_boot,
                         truncation_percentile = eval(ipw_res$args$truncation_percentile),
                         return_model_fits = FALSE)
     for (j in 1:n_z){
@@ -66,7 +69,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
   alpha <- 1 - conf_level
   res_boot <- vector(mode = 'list', length = n_z)
   for (j in 1:n_z){
-    res_boot_single <- matrix(NA, nrow = time_points + 1, ncol = 4)
+    res_boot_single <- matrix(NA, nrow = time_points, ncol = 4)
     colnames(res_boot_single) <- c('Time', 'Estimate', 'CI Lower', 'CI Upper')
 
     z_val <- z_levels[j]
@@ -75,7 +78,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
     res_boot_single[, 1] <- ipw_res$est[, 1]
     res_boot_single[, 2] <- ipw_res$est[, paste0('Z=', z_val)]
 
-    for (i in 1:(time_points + 1)){
+    for (i in 1:time_points){
       res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2))
     }
     res_boot[[j]] <- res_boot_single

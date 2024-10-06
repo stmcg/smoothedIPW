@@ -22,6 +22,7 @@ data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
 res <- ipw(data = data_null_processed,
            pooled = TRUE,
+           outcome_times = c(6, 12, 18, 24),
            A_model = A ~ L + Z,
            R_model_numerator = R ~ L_baseline + Z,
            R_model_denominator = R ~ L + A + Z,

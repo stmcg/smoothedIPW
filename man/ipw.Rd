@@ -7,6 +7,7 @@
 ipw(
   data,
   pooled = TRUE,
+  outcome_times,
   A_model,
   R_model_numerator,
   R_model_denominator,
@@ -19,6 +20,8 @@ ipw(
 \item{data}{Data frame containing the observed data}
 
 \item{pooled}{Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.}
+
+\item{outcome_times}{Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean. The default is all time points in \code{data}.}
 
 \item{A_model}{Model statement for the treatment variable}
 
@@ -36,10 +39,10 @@ ipw(
 A object of class "ipw". This object is a list that includes the following components:
 \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
 \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE})}
-\item{args}{A list containing the arguments supplied to \code{ipw}, except the observed data set.}
+\item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 }
 \description{
-This function applies the pooled inverse probability weighted approach described by McGrath et al. (in preparation).
+This function applies the pooled inverse probability weighted (IPW) approach described by McGrath et al. (in preparation).
 }
 \details{
 Additional description of the method
@@ -49,6 +52,7 @@ data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
 res <- ipw(data = data_null_processed,
            pooled = TRUE,
+           outcome_times = c(6, 12, 18, 24),
            A_model = A ~ L + Z,
            R_model_numerator = R ~ L_baseline + Z,
            R_model_denominator = R ~ L + A + Z,

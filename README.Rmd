@@ -42,6 +42,8 @@ We will estimate the effect of treatment strategies with the following three com
 * Adhere to medication $z$ throughout the follow up, allowing for a grace period of 2 months
 * Ensure an outcome measurement at the follow-up time of interest
 
+We consider the follow-up time of interest to be $t^*$, $t^* \in \{6, 12, 18, 24\}$.
+
 #### Data Set 
 
 We will use the example data set `data_null` which contains longitudinal data on 1,000 individuals over 25 time points. This data set was generated so that the treatment has no effect on the outcome at all time points. The data set `data_null` contains the following columns: 
@@ -93,13 +95,14 @@ An example application of `ipw` is below:
 ```{r}
 res_est <- ipw(data = data_null_processed,
                pooled = TRUE,
+               outcome_times = c(6, 12, 18, 24),
                A_model = A ~ L + Z,
                R_model_denominator = R ~ L + A + Z,
                R_model_numerator = R ~ L_baseline + Z,
                Y_model = Y ~ L_baseline * (t0 + Z))
 ```
 
-The estimated counterfactual outcome mean for each medication at each time point is given below.
+The estimated counterfactual outcome mean for each medication at each follow-up time of interest ($t^*$) is given below.
 ```{r}
 res_est
 ```

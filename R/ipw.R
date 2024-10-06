@@ -1,9 +1,10 @@
 #' Pooled inverse probability weighting
 #'
-#' This function applies the pooled inverse probability weighted approach described by McGrath et al. (in preparation).
+#' This function applies the pooled inverse probability weighted (IPW) approach described by McGrath et al. (in preparation).
 #'
 #' @param data Data frame containing the observed data
 #' @param pooled Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.
+#' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean. The default is all time points in \code{data}.
 #' @param A_model Model statement for the treatment variable
 #' @param R_model_numerator Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
 #' @param R_model_denominator Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights
@@ -14,7 +15,7 @@
 #' @return A object of class "ipw". This object is a list that includes the following components:
 #' \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
 #' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE})}
-#' \item{args}{A list containing the arguments supplied to \code{ipw}, except the observed data set.}
+#' \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 #'
 #' @details
 #' Additional description of the method
@@ -24,6 +25,7 @@
 #'                                  baseline_vars = 'L')
 #' res <- ipw(data = data_null_processed,
 #'            pooled = TRUE,
+#'            outcome_times = c(6, 12, 18, 24),
 #'            A_model = A ~ L + Z,
 #'            R_model_numerator = R ~ L_baseline + Z,
 #'            R_model_denominator = R ~ L + A + Z,
@@ -34,6 +36,7 @@
 
 ipw <- function(data,
                 pooled = TRUE,
+                outcome_times,
                 A_model,
                 R_model_numerator,
                 R_model_denominator,
@@ -60,7 +63,10 @@ ipw <- function(data,
   }
 
   # Set parameters
-  time_points <- max(data$t0)
+  if (missing(outcome_times)){
+    outcome_times <- 0:max(data$t0)
+  }
+  time_points <- length(outcome_times)
 
   # Fit models for the nuisance functions
   fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,])
@@ -95,28 +101,31 @@ ipw <- function(data,
   # Preparing data sets for estimating counterfactual outcome means
   z_levels <- unique(data$Z)
   n_z <- length(z_levels)
-  est <- matrix(NA, nrow = time_points + 1, ncol = n_z + 1)
-  est[, 1] <- 0:time_points
+  est <- matrix(NA, nrow = time_points, ncol = n_z + 1)
+  est[, 1] <- outcome_times
   colnames(est) <- c('time', paste0('Z=', z_levels))
   data_baseline <- data[data$t0 == 0,]
 
   # Estimating counterfactual outcome means
+  row_index <- 0
   if (pooled){
     fit_Y <- stats::lm(formula = Y_model, data = data_censored, weights = weights)
-    for (k in 0:time_points){
+    for (k in outcome_times){
+      row_index <- row_index + 1
       data_temp <- data_baseline; data_temp$t0 <- k
       col_index <- 1
       for (z_val in z_levels){
         col_index <- col_index + 1
         data_temp$Z <- z_val
-        est[k+1, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+        est[row_index, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
       }
     }
   } else {
     if (return_model_fits){
-      fit_Y_all <- vector(mode = "list", length = time_points + 1)
+      fit_Y_all <- vector(mode = "list", length = time_points)
     }
-    for (k in 0:time_points){
+    for (k in outcome_times){
+      row_index <- row_index + 1
       fit_Y <- stats::lm(Y_model, data = data_censored[data_censored$t0 == k,],
                          weights = weights)
       data_temp <- data_baseline; data_temp$t0 <- k
@@ -124,7 +133,7 @@ ipw <- function(data,
       for (z_val in z_levels){
         col_index <- col_index + 1
         data_temp$Z <- z_val
-        est[k+1, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+        est[row_index, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
       }
       if (return_model_fits){
         fit_Y_all[[k+1]] <- fit_Y
@@ -134,6 +143,7 @@ ipw <- function(data,
 
   # Get all arguments supplied to the function, except the input data set
   args <- as.list(match.call())[-1]
+  args$outcome_times <- outcome_times
   args$data <- NULL
 
   if (return_model_fits){

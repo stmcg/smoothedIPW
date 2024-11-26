@@ -39,7 +39,9 @@ three components:
 - Ensure an outcome measurement at the follow-up time of interest
 
 We consider the follow-up time of interest to be $t^*$,
-$t^* \in \{6, 12, 18, 24\}$.
+$t^* \in \{6, 12, 18, 24\}$. In this example, we consider that there are
+no deaths over the study period. See the package help files for examples
+with deaths over the study period.
 
 #### Data Set
 

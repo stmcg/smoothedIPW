@@ -7,6 +7,7 @@
 ipw(
   data,
   pooled = TRUE,
+  pooling_method = "nonstacked",
   outcome_times,
   A_model,
   R_model_numerator,
@@ -20,6 +21,8 @@ ipw(
 \item{data}{Data frame containing the observed data}
 
 \item{pooled}{Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.}
+
+\item{pooling_method}{Character string specify the pooled IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.}
 
 \item{outcome_times}{Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean. The default is all time points in \code{data}.}
 
@@ -38,7 +41,9 @@ ipw(
 \value{
 A object of class "ipw". This object is a list that includes the following components:
 \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
-\item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE})}
+\item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
+If the nonstacked pooled appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
+If the stacked pooled approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
 \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 }
 \description{
@@ -48,10 +53,25 @@ This function applies the pooled inverse probability weighted (IPW) approach des
 Additional description of the method
 }
 \examples{
+
+## Pooled IPW without deaths
 data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
 res <- ipw(data = data_null_processed,
            pooled = TRUE,
+           outcome_times = c(6, 12, 18, 24),
+           A_model = A ~ L + Z,
+           R_model_numerator = R ~ L_baseline + Z,
+           R_model_denominator = R ~ L + A + Z,
+           Y_model = Y ~ L_baseline * (time + Z))
+res$est
+
+## Pooled IPW with deaths, nonstacked pooling method
+data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_length = 2,
+                                        baseline_vars = 'L')
+res <- ipw(data = data_null_deaths_processed,
+           pooled = TRUE,
+           pooling_method = 'nonstacked',
            outcome_times = c(6, 12, 18, 24),
            A_model = A ~ L + Z,
            R_model_numerator = R ~ L_baseline + Z,

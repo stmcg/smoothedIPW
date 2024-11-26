@@ -4,6 +4,7 @@
 #'
 #' @param data Data frame containing the observed data
 #' @param pooled Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.
+#' @param pooling_method Character string specify the pooled IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
 #' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean. The default is all time points in \code{data}.
 #' @param A_model Model statement for the treatment variable
 #' @param R_model_numerator Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
@@ -14,13 +15,17 @@
 #'
 #' @return A object of class "ipw". This object is a list that includes the following components:
 #' \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
-#' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE})}
+#' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
+#'                   If the nonstacked pooled appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
+#'                   If the stacked pooled approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
 #' \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 #'
 #' @details
 #' Additional description of the method
 #'
 #' @examples
+#'
+#' ## Pooled IPW without deaths
 #' data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
 #'                                  baseline_vars = 'L')
 #' res <- ipw(data = data_null_processed,
@@ -32,10 +37,23 @@
 #'            Y_model = Y ~ L_baseline * (time + Z))
 #' res$est
 #'
+#' ## Pooled IPW with deaths, nonstacked pooling method
+#' data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_length = 2,
+#'                                         baseline_vars = 'L')
+#' res <- ipw(data = data_null_deaths_processed,
+#'            pooled = TRUE,
+#'            pooling_method = 'nonstacked',
+#'            outcome_times = c(6, 12, 18, 24),
+#'            A_model = A ~ L + Z,
+#'            R_model_numerator = R ~ L_baseline + Z,
+#'            R_model_denominator = R ~ L + A + Z,
+#'            Y_model = Y ~ L_baseline * (time + Z))
+#' res$est
+#'
 #' @export
-
 ipw <- function(data,
                 pooled = TRUE,
+                pooling_method = 'nonstacked',
                 outcome_times,
                 A_model,
                 R_model_numerator,
@@ -66,10 +84,190 @@ ipw <- function(data,
   if (missing(outcome_times)){
     outcome_times <- 0:max(data$time)
   }
+  any_deaths <- 'D' %in% colnames(data)
+
+  if (!any_deaths){
+    # Pooled/nonpooled IPW without deaths
+    res <- ipw_helper(data = data,
+                      pooled = pooled,
+                      outcome_times = outcome_times,
+                      A_model = A_model,
+                      R_model_numerator = R_model_numerator,
+                      R_model_denominator = R_model_denominator,
+                      Y_model = Y_model,
+                      truncation_percentile = truncation_percentile,
+                      return_model_fits = return_model_fits)
+    est <- res$est
+    model_fits <- res$model_fits
+  } else {
+    if (!pooled){
+      # Nonpooled IPW with deaths
+      if (return_model_fits){
+        model_fits <- vector(mode = "list", length = length(outcome_times))
+      } else {
+        model_fits <- NULL
+      }
+
+      i <- 1
+      for (outcome_time in outcome_times){
+        newdata <- data[data$time <= outcome_time,]
+        ids_to_keep <- newdata[newdata$time == outcome_time & newdata$D == 0, ]$id
+        newdata <- newdata[newdata$id %in% ids_to_keep, ]
+
+        res_temp <- ipw_helper(data = newdata,
+                               pooled = FALSE,
+                               outcome_times = outcome_time,
+                               A_model = A_model,
+                               R_model_numerator = R_model_numerator,
+                               R_model_denominator = R_model_denominator,
+                               Y_model = Y_model,
+                               truncation_percentile = truncation_percentile,
+                               return_model_fits = return_model_fits)
+        if (i == 1){
+          est <- res_temp$est
+        } else {
+          est <- rbind(est, res_temp$est)
+        }
+        if (return_model_fits){
+          model_fits[[i]] <- res_temp$model_fits
+        }
+        i <- i + 1
+      }
+    } else {
+      # IPW with deaths, nonstacked pooling method
+      if (pooling_method == 'nonstacked'){
+        if (return_model_fits){
+          model_fits <- vector(mode = "list", length = length(outcome_times))
+        } else {
+          model_fits <- NULL
+        }
+
+        i <- 1
+        for (outcome_time in outcome_times){
+          newdata <- data[data$time <= outcome_time,]
+          ids_to_keep <- newdata[newdata$time == outcome_time & newdata$D == 0, ]$id
+          newdata <- newdata[newdata$id %in% ids_to_keep, ]
+
+          res_temp <- ipw_helper(data = newdata,
+                                 pooled = TRUE,
+                                 outcome_times = outcome_time,
+                                 A_model = A_model,
+                                 R_model_numerator = R_model_numerator,
+                                 R_model_denominator = R_model_denominator,
+                                 Y_model = Y_model,
+                                 truncation_percentile = truncation_percentile,
+                                 return_model_fits = return_model_fits)
+          if (i == 1){
+            est <- res_temp$est
+          } else {
+            est <- rbind(est, res_temp$est)
+          }
+          if (return_model_fits){
+            model_fits[[i]] <- res_temp$model_fits
+          }
+          i <- i + 1
+        }
+      } else if (pooling_method == 'stacked'){
+        # IPW with deaths, stacked pooling method
+        if (return_model_fits){
+          model_fits <- vector(mode = "list", length = max(data$time) + 2)
+        } else {
+          model_fits <- NULL
+        }
+
+        # Step 1: Created stacked data set with weights
+        for (j in 0:max(data$time)){
+          newdata <- data[data$time <= j,]
+          ids_to_keep <- newdata[newdata$time == j & newdata$D == 0, ]$id
+          newdata <- newdata[newdata$id %in% ids_to_keep, ]
+
+          res_temp <- ipw_helper(data = newdata,
+                                pooled = TRUE,
+                                outcome_times = j,
+                                A_model = A_model,
+                                R_model_numerator = R_model_numerator,
+                                R_model_denominator = R_model_denominator,
+                                Y_model = Y_model,
+                                truncation_percentile = truncation_percentile,
+                                return_model_fits = return_model_fits,
+                                only_compute_weights = TRUE)
+          df_stack <- res_temp$df_stack
+          if (return_model_fits){
+            model_fits[[j + 1]] <- res_temp$model_fits
+          }
+          if (j == 0){
+            dat_stacked <- df_stack
+          } else {
+            dat_stacked <- rbind(dat_stacked, df_stack)
+          }
+        }
+
+        # Step 2: Fit weighted outcome model
+        fit_Y <- stats::lm(formula = Y_model, data = dat_stacked, weights = weights)
+        if (return_model_fits){
+          model_fits[[max(data$time) + 2]] <- fit_Y
+        }
+
+        # Step 3: Estimating counterfactual outcome means
+        z_levels <- unique(data$Z)
+        n_z <- length(z_levels)
+        est <- matrix(NA, nrow = length(outcome_times), ncol = n_z + 1)
+        est[, 1] <- outcome_times
+        colnames(est) <- c('time', paste0('Z=', z_levels))
+        data_baseline <- data[data$time == 0,]
+
+        row_index <- 0
+        for (outcome_time in outcome_times){
+          row_index <- row_index + 1
+
+          data_temp <- data_baseline
+          data_temp$time <- outcome_time
+          ids_to_keep <- data[data$time == outcome_time & data$D == 0, ]$id
+          data_temp <- data_temp[data_temp$id %in% ids_to_keep, ]
+
+          col_index <- 1
+          for (z_val in z_levels){
+            col_index <- col_index + 1
+            data_temp$Z <- z_val
+            est[row_index, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+          }
+        }
+      }
+    }
+  }
+
+  # Get all arguments supplied to the function, except the input data set
+  args <- as.list(match.call())[-1]
+  args$outcome_times <- outcome_times
+  args$data <- NULL
+
+  out <- list(est = est, args = args, model_fits = model_fits)
+  class(out) <- 'ipw'
+  return(out)
+}
+
+
+
+ipw_helper <- function(data,
+                pooled = TRUE,
+                outcome_times,
+                A_model,
+                R_model_numerator,
+                R_model_denominator,
+                Y_model,
+                truncation_percentile = NULL,
+                return_model_fits = TRUE,
+                only_compute_weights = FALSE){
+
   time_points <- length(outcome_times)
 
   # Fit models for the nuisance functions
-  fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,])
+  fit_model_A <- nrow(data[data$A_model_eligible == 1,]) >= 1
+  if (fit_model_A){
+    fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,])
+  } else {
+    fit_A <- NULL
+  }
   fit_R_denominator <- stats::glm(R_model_denominator, family = 'binomial', data = data)
   if (!missing(R_model_numerator)){
     fit_R_numerator <- stats::glm(R_model_numerator, family = 'binomial', data = data)
@@ -91,6 +289,18 @@ ipw <- function(data,
   weights_A <- unname(unlist(tapply(1 / prob_A1, data_censored$id, FUN = cumprod)))
   weights_R <- ifelse(data_censored$R == 1, prob_R1_numerator / prob_R1_denominator, 0)
   data_censored$weights <- weights_A * weights_R
+
+  # End function if only needing weights
+  if (only_compute_weights){
+    if (return_model_fits){
+      model_fits <- list(fit_A = fit_A,
+                         fit_R_denominator = fit_R_denominator,
+                         fit_R_numerator = fit_R_numerator)
+    } else {
+      model_fits <- NULL
+    }
+    return(list(est = NULL, model_fits = model_fits, df_stack = data_censored))
+  }
 
   # Truncate IP weights, if applicable
   if (!is.null(truncation_percentile)){
@@ -141,11 +351,6 @@ ipw <- function(data,
     }
   }
 
-  # Get all arguments supplied to the function, except the input data set
-  args <- as.list(match.call())[-1]
-  args$outcome_times <- outcome_times
-  args$data <- NULL
-
   if (return_model_fits){
     if (pooled){
       model_fits <- list(fit_A = fit_A,
@@ -161,8 +366,7 @@ ipw <- function(data,
   } else {
     model_fits <- NULL
   }
-  out <- list(est = as.data.frame(est), args = args, model_fits = model_fits)
-  class(out) <- 'ipw'
+  out <- list(est = as.data.frame(est), model_fits = model_fits, df_stack = NULL)
 
   return(out)
 }

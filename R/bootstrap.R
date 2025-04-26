@@ -78,8 +78,12 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
     res_boot_single[, 1] <- ipw_res$est[, 1]
     res_boot_single[, 2] <- ipw_res$est[, paste0('Z=', z_val)]
 
-    for (i in 1:time_points){
-      res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2))
+    if (time_points > 1){
+      for (i in 1:time_points){
+        res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2))
+      }
+    } else {
+      res_boot_single[1, c(3, 4)] <- stats::quantile(res_boot_z, probs = c(alpha / 2, 1 - alpha / 2))
     }
     res_boot[[j]] <- res_boot_single
   }

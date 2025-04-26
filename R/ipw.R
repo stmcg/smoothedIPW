@@ -136,6 +136,14 @@ ipw <- function(data,
     warning("Y_model includes 'A' as a predictor. Y_model should not include post-baseline variables.")
   }
 
+  # Checking that suitable data processing was performed
+  if (!'C_artificial' %in% colnames(data)){
+    stop("The observed data must include a column called 'C_artificial' indicating when an individual should be artificially censored.")
+  }
+  if (!'A_model_eligible' %in% colnames(data)){
+    stop("The observed data must include a column called 'A_model_eligible' indicating what records should be used for fitting the treatment adherence model.")
+  }
+
   # Set parameters
   if (missing(outcome_times)){
     outcome_times <- 0:max(data$time)

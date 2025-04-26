@@ -91,6 +91,9 @@ ipw <- function(data,
   if (!"Z" %in% rhs) {
     warning("A_model does not include 'Z' as a predictor.")
   }
+  if ("D" %in% rhs) {
+    stop("A_model should not include 'D' as a predictor.")
+  }
 
   # Check R_model_numerator (if applicable)
   if (!missing(R_model_numerator)){
@@ -104,6 +107,9 @@ ipw <- function(data,
     if (!"Z" %in% rhs) {
       warning("R_model_numerator does not include 'Z' as a predictor.")
     }
+    if ("D" %in% rhs) {
+      stop("R_model_numerator should not include 'D' as a predictor.")
+    }
   }
 
   # Check R_model_denominator
@@ -116,6 +122,9 @@ ipw <- function(data,
   }
   if (!"Z" %in% rhs) {
     warning("R_model_denominator does not include 'Z' as a predictor.")
+  }
+  if ("D" %in% rhs) {
+    stop("R_model_denominator should not include 'D' as a predictor.")
   }
 
   # Check Y_model
@@ -133,7 +142,13 @@ ipw <- function(data,
     warning("Y_model does not include 'time' as a predictor although the pooled IPW method is selected.")
   }
   if ("A" %in% rhs) {
-    warning("Y_model includes 'A' as a predictor. Y_model should not include post-baseline variables.")
+    stop("Y_model should not include 'A' (or any other post-baseline covariate) as a predictor.")
+  }
+  if ("R" %in% rhs) {
+    stop("Y_model should not include 'R' (or any other post-baseline covariate) as a predictor.")
+  }
+  if ("D" %in% rhs) {
+    stop("Y_model should not include 'D' as a predictor.")
   }
 
   # Checking that suitable data processing was performed
@@ -330,6 +345,7 @@ ipw_helper <- function(data,
   if (fit_model_A){
     fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,])
   } else {
+    warning('There are no records that can be used to fit the treatment adherence model.')
     fit_A <- NULL
   }
   fit_R_denominator <- stats::glm(R_model_denominator, family = 'binomial', data = data)

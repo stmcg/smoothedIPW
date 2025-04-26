@@ -141,6 +141,9 @@ ipw <- function(data,
   if (!"time" %in% rhs & pooled) {
     warning("Y_model does not include 'time' as a predictor although the pooled IPW method is selected.")
   }
+  if ("time" %in% rhs & !pooled) {
+    warning("Y_model should not include 'time' as a predictor since the non-pooled IPW method is selected.")
+  }
   if ("A" %in% rhs) {
     stop("Y_model should not include 'A' (or any other post-baseline covariate) as a predictor.")
   }

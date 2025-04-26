@@ -3,7 +3,7 @@
 #' This function applies nonparametric bootstrap to construct confidence intervals around the counterfactual mean estimates obtained by \code{\link{ipw}}.
 #'
 #' @param ipw_res Output from the \code{ipw} function.
-#' @param data Data frame containing the observed data
+#' @param data Data table containing the observed data
 #' @param n_boot Numeric scalar specifying the number of bootstrap replicates to use
 #' @param conf_level Numeric scalar specifying the confidence level for the confidence intervals. The default is \code{0.95}.
 #'
@@ -40,6 +40,10 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
   }
   if (conf_level < 0 | conf_level > 1){
     stop('conf_level must be between 0 and 1')
+  }
+  if (!data.table::is.data.table(data)) {
+    message("The argument 'data' must be a data.table. Converting 'data' to a data.table.")
+    data <- data.table::as.data.table(data)
   }
 
   outcome_times <- eval(ipw_res$args$outcome_times)

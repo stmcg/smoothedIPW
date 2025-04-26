@@ -2,7 +2,7 @@
 #'
 #' This function applies the pooled inverse probability weighted (IPW) approach described by McGrath et al. (in preparation).
 #'
-#' @param data Data frame containing the observed data
+#' @param data Data table (or data frame) containing the observed data
 #' @param pooled Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.
 #' @param pooling_method Character string specify the pooled IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
 #' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean. The default is all time points in \code{data}.

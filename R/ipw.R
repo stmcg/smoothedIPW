@@ -80,6 +80,62 @@ ipw <- function(data,
     }
   }
 
+  # Check A_model
+  if (!inherits(A_model, "formula")) {
+    stop("A_model must be a formula, e.g., A ~ L + Z")
+  }
+  lhs <- all.vars(A_model[[2]]); rhs <- all.vars(A_model[[3]])
+  if (length(lhs) != 1 || lhs != "A") {
+    stop("The left-hand side of A_model must be the variable 'A'.")
+  }
+  if (!"Z" %in% rhs) {
+    warning("A_model does not include 'Z' as a predictor.")
+  }
+
+  # Check R_model_numerator (if applicable)
+  if (!missing(R_model_numerator)){
+    if (!inherits(R_model_numerator, "formula")) {
+      stop("R_model_numerator must be a formula, e.g., R ~ L_baseline + Z")
+    }
+    lhs <- all.vars(R_model_numerator[[2]]); rhs <- all.vars(R_model_numerator[[3]])
+    if (length(lhs) != 1 || lhs != "R") {
+      stop("The left-hand side of R_model_numerator must be the variable 'R'.")
+    }
+    if (!"Z" %in% rhs) {
+      warning("R_model_numerator does not include 'Z' as a predictor.")
+    }
+  }
+
+  # Check R_model_denominator
+  if (!inherits(R_model_denominator, "formula")) {
+    stop("R_model_denominator must be a formula, e.g., R ~ L + A + Z")
+  }
+  lhs <- all.vars(R_model_denominator[[2]]); rhs <- all.vars(R_model_denominator[[3]])
+  if (length(lhs) != 1 || lhs != "R") {
+    stop("The left-hand side of R_model_denominator must be the variable 'R'.")
+  }
+  if (!"Z" %in% rhs) {
+    warning("R_model_denominator does not include 'Z' as a predictor.")
+  }
+
+  # Check Y_model
+  if (!inherits(Y_model, "formula")) {
+    stop("Y_model must be a formula, e.g., R ~ L_baseline + Z")
+  }
+  lhs <- all.vars(Y_model[[2]]); rhs <- all.vars(Y_model[[3]])
+  if (length(lhs) != 1 || lhs != "Y") {
+    stop("The left-hand side of Y_model must be the variable 'Y'.")
+  }
+  if (!"Z" %in% rhs) {
+    warning("Y_model does not include 'Z' as a predictor.")
+  }
+  if (!"time" %in% rhs & pooled) {
+    warning("Y_model does not include 'time' as a predictor although the pooled IPW method is selected.")
+  }
+  if ("A" %in% rhs) {
+    warning("Y_model includes 'A' as a predictor. Y_model should not include post-baseline variables.")
+  }
+
   # Set parameters
   if (missing(outcome_times)){
     outcome_times <- 0:max(data$time)

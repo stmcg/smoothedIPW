@@ -154,6 +154,21 @@ ipw <- function(data,
     stop("Y_model should not include 'D' as a predictor.")
   }
 
+  # Check person-time format of data
+  if (!all.equal(sort(as.numeric(unique(data$id))),
+                 1:length(unique(data$id)))){
+    stop("Individual ID values (specified by the 'id' column in 'data') should range from 1 to n, where n denotes the number of unique individuals.")
+  }
+  problematic_ids <- tapply(data$time, data$id,
+                            FUN = function(x){
+                              !isTRUE(all.equal(x, 0:(length(x) - 1)))
+                            })
+  if (any(problematic_ids)){
+    stop(paste0("For each individual, time intervals in the observed data (specified by the 'time' column in 'data') should begin with 0 and increase in increments of 1 in consecutive rows, where no time records are skipped. The data set includes ",
+                sum(problematic_ids), ' individuals that do not follow this format correctly, including IDs ',
+                paste(utils::head(names(problematic_ids)[problematic_ids]), collapse = ", "), '.'))
+  }
+
   # Checking that suitable data processing was performed
   if (!'C_artificial' %in% colnames(data)){
     stop("The observed data must include a column called 'C_artificial' indicating when an individual should be artificially censored.")

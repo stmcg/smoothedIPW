@@ -345,15 +345,44 @@ ipw_helper <- function(data,
 
   # Fit models for the nuisance functions
   fit_model_A <- nrow(data[data$A_model_eligible == 1,]) >= 1
+
+  error_message_fit <- NULL
   if (fit_model_A){
-    fit_A <- stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,])
+    fit_A <- tryCatch(
+      stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,]),
+      error = function(e) {
+        error_message_fit <<- paste0("Error in fitting the model for A: ", conditionMessage(e))
+        NULL
+      }
+    )
+    if (!is.null(error_message_fit)) {
+      stop(error_message_fit)
+    }
   } else {
-    warning('There are no records that can be used to fit the treatment adherence model.')
     fit_A <- NULL
   }
-  fit_R_denominator <- stats::glm(R_model_denominator, family = 'binomial', data = data)
+  fit_R_denominator <- tryCatch(
+    stats::glm(R_model_denominator, family = 'binomial', data = data),
+    error = function(e) {
+      error_message_fit <<- paste0("Error in fitting the model for R (denominator): ", conditionMessage(e))
+      NULL
+    }
+  )
+  if (!is.null(error_message_fit)) {
+    stop(error_message_fit)
+  }
+
   if (!missing(R_model_numerator)){
-    fit_R_numerator <- stats::glm(R_model_numerator, family = 'binomial', data = data)
+    fit_R_numerator <- tryCatch(
+      stats::glm(R_model_numerator, family = 'binomial', data = data),
+      error = function(e) {
+        error_message_fit <<- paste0("Error in fitting the model for R (numerator): ", conditionMessage(e))
+        NULL
+      }
+    )
+    if (!is.null(error_message_fit)) {
+      stop(error_message_fit)
+    }
   } else {
     fit_R_numerator <- NULL
   }
@@ -402,7 +431,16 @@ ipw_helper <- function(data,
   # Estimating counterfactual outcome means
   row_index <- 0
   if (pooled){
-    fit_Y <- stats::lm(formula = Y_model, data = data_censored, weights = weights)
+    fit_Y <- tryCatch(
+      stats::lm(formula = Y_model, data = data_censored, weights = weights),
+      error = function(e) {
+        error_message_fit <<- paste0("Error in fitting the model for Y: ", conditionMessage(e))
+        NULL
+      }
+    )
+    if (!is.null(error_message_fit)) {
+      stop(error_message_fit)
+    }
     for (k in outcome_times){
       row_index <- row_index + 1
       data_temp <- data_baseline; data_temp$time <- k
@@ -419,8 +457,17 @@ ipw_helper <- function(data,
     }
     for (k in outcome_times){
       row_index <- row_index + 1
-      fit_Y <- stats::lm(Y_model, data = data_censored[data_censored$time == k,],
-                         weights = weights)
+      fit_Y <- tryCatch(
+        stats::lm(Y_model, data = data_censored[data_censored$time == k,],
+                  weights = weights),
+        error = function(e) {
+          error_message_fit <<- paste0(paste0("Error in fitting the model for Y at time ", k, ': '), conditionMessage(e))
+          NULL
+        }
+      )
+      if (!is.null(error_message_fit)) {
+        stop(error_message_fit)
+      }
       data_temp <- data_baseline; data_temp$time <- k
       col_index <- 1
       for (z_val in z_levels){

@@ -18,7 +18,7 @@ ipw(
 )
 }
 \arguments{
-\item{data}{Data frame containing the observed data}
+\item{data}{Data table (or data frame) containing the observed data}
 
 \item{pooled}{Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.}
 

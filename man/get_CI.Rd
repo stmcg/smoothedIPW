@@ -9,7 +9,7 @@ get_CI(ipw_res, data, n_boot, conf_level = 0.95)
 \arguments{
 \item{ipw_res}{Output from the \code{ipw} function.}
 
-\item{data}{Data frame containing the observed data}
+\item{data}{Data table containing the observed data}
 
 \item{n_boot}{Numeric scalar specifying the number of bootstrap replicates to use}
 

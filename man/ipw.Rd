@@ -15,7 +15,7 @@ ipw(
   Y_model,
   truncation_percentile = NULL,
   return_model_fits = TRUE,
-  trim_models
+  trim_returned_models = FALSE
 )
 }
 \arguments{
@@ -39,7 +39,7 @@ ipw(
 
 \item{return_model_fits}{Logical scalar specifying whether to include the fitted models in the output}
 
-\item{trim_models}{Logical scalar specifying whether to perform some memory optimization by removing non-essential components from the fitted model objects (e.g., treatment model). If this is set to \code{TRUE}, it reduces the size of the fitted models and does not affect any downstream computations. However, users will not be able to access some elements of the fitted models in this case, such as the ability to apply the \code{summary} function to inspect the fitted models. By default, this argument is set to \code{TRUE} when \code{return_model_fits} is set to \code{FALSE}.}
+\item{trim_returned_models}{Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed dataset is large. By default, this argument is set to \code{FALSE}.}
 }
 \value{
 A object of class "ipw". This object is a list that includes the following components:

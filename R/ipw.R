@@ -12,6 +12,7 @@
 #' @param Y_model Model statement for the outcome variable
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncated the IP weights
 #' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output
+#' @param trim_models Logical scalar specifying whether to perform some memory optimization by removing non-essential components from the fitted model objects (e.g., treatment model). If this is set to \code{TRUE}, it reduces the size of the fitted models and does not affect any downstream computations. However, users will not be able to access some elements of the fitted models in this case, such as the ability to apply the \code{summary} function to inspect the fitted models. By default, this argument is set to \code{TRUE} when \code{return_model_fits} is set to \code{FALSE}.
 #'
 #' @return A object of class "ipw". This object is a list that includes the following components:
 #' \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
@@ -60,7 +61,8 @@ ipw <- function(data,
                 R_model_denominator,
                 Y_model,
                 truncation_percentile = NULL,
-                return_model_fits = TRUE){
+                return_model_fits = TRUE,
+                trim_models){
   # Check input
   if (missing(data)){
     stop('The argument data must be specified')
@@ -182,6 +184,9 @@ ipw <- function(data,
     outcome_times <- 0:max(data$time)
   }
   any_deaths <- 'D' %in% colnames(data)
+  if (missing(trim_models)){
+    trim_models <- !return_model_fits
+  }
 
   if (!any_deaths){
     # Pooled/nonpooled IPW without deaths
@@ -193,7 +198,8 @@ ipw <- function(data,
                       R_model_denominator = R_model_denominator,
                       Y_model = Y_model,
                       truncation_percentile = truncation_percentile,
-                      return_model_fits = return_model_fits)
+                      return_model_fits = return_model_fits,
+                      trim_models = trim_models)
     est <- res$est
     model_fits <- res$model_fits
   } else {
@@ -219,7 +225,8 @@ ipw <- function(data,
                                R_model_denominator = R_model_denominator,
                                Y_model = Y_model,
                                truncation_percentile = truncation_percentile,
-                               return_model_fits = return_model_fits)
+                               return_model_fits = return_model_fits,
+                               trim_models = trim_models)
         if (i == 1){
           est <- res_temp$est
         } else {
@@ -253,7 +260,8 @@ ipw <- function(data,
                                  R_model_denominator = R_model_denominator,
                                  Y_model = Y_model,
                                  truncation_percentile = truncation_percentile,
-                                 return_model_fits = return_model_fits)
+                                 return_model_fits = return_model_fits,
+                                 trim_models = trim_models)
           if (i == 1){
             est <- res_temp$est
           } else {
@@ -287,7 +295,8 @@ ipw <- function(data,
                                 Y_model = Y_model,
                                 truncation_percentile = truncation_percentile,
                                 return_model_fits = return_model_fits,
-                                only_compute_weights = TRUE)
+                                only_compute_weights = TRUE,
+                                trim_models = trim_models)
           df_stack <- res_temp$df_stack
           if (return_model_fits){
             model_fits[[j + 1]] <- res_temp$model_fits
@@ -354,7 +363,8 @@ ipw_helper <- function(data,
                 Y_model,
                 truncation_percentile = NULL,
                 return_model_fits = TRUE,
-                only_compute_weights = FALSE){
+                only_compute_weights = FALSE,
+                trim_models){
 
   time_points <- length(outcome_times)
 
@@ -364,7 +374,7 @@ ipw_helper <- function(data,
   error_message_fit <- NULL
   if (fit_model_A){
     fit_A <- tryCatch(
-      stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,]),
+      trim_glm(stats::glm(A_model, family = 'binomial', data = data[data$A_model_eligible == 1,]), trim_models = trim_models),
       error = function(e) {
         error_message_fit <<- paste0("Error in fitting the model for A: ", conditionMessage(e))
         NULL
@@ -377,7 +387,7 @@ ipw_helper <- function(data,
     fit_A <- NULL
   }
   fit_R_denominator <- tryCatch(
-    stats::glm(R_model_denominator, family = 'binomial', data = data),
+    trim_glm(stats::glm(R_model_denominator, family = 'binomial', data = data), trim_models = trim_models),
     error = function(e) {
       error_message_fit <<- paste0("Error in fitting the model for R (denominator): ", conditionMessage(e))
       NULL
@@ -389,7 +399,7 @@ ipw_helper <- function(data,
 
   if (!missing(R_model_numerator)){
     fit_R_numerator <- tryCatch(
-      stats::glm(R_model_numerator, family = 'binomial', data = data),
+      trim_glm(stats::glm(R_model_numerator, family = 'binomial', data = data), trim_models = trim_models),
       error = function(e) {
         error_message_fit <<- paste0("Error in fitting the model for R (numerator): ", conditionMessage(e))
         NULL
@@ -447,7 +457,7 @@ ipw_helper <- function(data,
   row_index <- 0
   if (pooled){
     fit_Y <- tryCatch(
-      stats::lm(formula = Y_model, data = data_censored, weights = weights),
+      trim_glm(stats::lm(formula = Y_model, data = data_censored, weights = weights), trim_models = trim_models),
       error = function(e) {
         error_message_fit <<- paste0("Error in fitting the model for Y: ", conditionMessage(e))
         NULL
@@ -473,8 +483,8 @@ ipw_helper <- function(data,
     for (k in outcome_times){
       row_index <- row_index + 1
       fit_Y <- tryCatch(
-        stats::lm(Y_model, data = data_censored[data_censored$time == k,],
-                  weights = weights),
+        trim_glm(stats::lm(Y_model, data = data_censored[data_censored$time == k,],
+                  weights = weights), trim_models = trim_models),
         error = function(e) {
           error_message_fit <<- paste0(paste0("Error in fitting the model for Y at time ", k, ': '), conditionMessage(e))
           NULL
@@ -516,3 +526,34 @@ ipw_helper <- function(data,
   return(out)
 }
 
+trim_glm <- function(fit, trim_models) {
+  if (trim_models){
+    # Remove big components
+    fit$y <- NULL
+    fit$model <- NULL
+    fit$residuals <- NULL
+    fit$fitted.values <- NULL
+    fit$effects <- NULL
+    fit$qr$qr <- NULL
+    fit$linear.predictors <- NULL
+    fit$weights <- NULL
+    fit$prior.weights <- NULL
+    fit$data <- NULL
+
+    # Remove unnecessary parts of the family
+    fit$family$variance <- NULL
+    fit$family$dev.resids <- NULL
+    fit$family$aic <- NULL
+    fit$family$validmu <- NULL
+    fit$family$simulate <- NULL
+
+    # Clear environments from terms and formula
+    if (!is.null(attr(fit$terms, ".Environment"))) {
+      attr(fit$terms, ".Environment") <- NULL
+    }
+    if (!is.null(attr(fit$formula, ".Environment"))) {
+      attr(fit$formula, ".Environment") <- NULL
+    }
+  }
+  return(fit)
+}

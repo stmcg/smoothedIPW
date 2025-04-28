@@ -368,9 +368,11 @@ ipw_helper <- function(data,
 
   time_points <- length(outcome_times)
 
-  # Fit models for the nuisance functions
-  fit_model_A <- nrow(data[data$A_model_eligible == 1,]) >= 1
+  # Artificially censor individuals when they deviate from the treatment strategy
+  data_censored <- data[data$C_artificial == 0,]
 
+  # Treatment model and weights
+  fit_model_A <- nrow(data[data$A_model_eligible == 1,]) >= 1
   error_message_fit <- NULL
   if (fit_model_A){
     fit_A <- tryCatch(
@@ -386,6 +388,12 @@ ipw_helper <- function(data,
   } else {
     fit_A <- NULL
   }
+  prob_A1 <- ifelse(data_censored$A_model_eligible == 1, stats::predict(fit_A, type = 'response', newdata = data_censored), 1)
+  if (!return_model_fits){
+    fit_A <- NULL
+  }
+
+  # Measurement model (denominator) and weights
   fit_R_denominator <- tryCatch(
     trim_glm(stats::glm(R_model_denominator, family = 'binomial', data = data), trim_models = trim_models),
     error = function(e) {
@@ -396,7 +404,12 @@ ipw_helper <- function(data,
   if (!is.null(error_message_fit)) {
     stop(error_message_fit)
   }
+  prob_R1_denominator <- stats::predict(fit_R_denominator, type = 'response', newdata = data_censored)
+  if (!return_model_fits){
+    fit_R_denominator <- NULL
+  }
 
+  # Measurement model (numerator) and weights
   if (!missing(R_model_numerator)){
     fit_R_numerator <- tryCatch(
       trim_glm(stats::glm(R_model_numerator, family = 'binomial', data = data), trim_models = trim_models),
@@ -411,18 +424,16 @@ ipw_helper <- function(data,
   } else {
     fit_R_numerator <- NULL
   }
-
-  # Artificially censor individuals when they deviate from the treatment strategy
-  data_censored <- data[data$C_artificial == 0,]
-
-  # Compute IP weights based on censored data set
-  prob_A1 <- ifelse(data_censored$A_model_eligible == 1, stats::predict(fit_A, type = 'response', newdata = data_censored), 1)
-  prob_R1_denominator <- stats::predict(fit_R_denominator, type = 'response', newdata = data_censored)
   if (!missing(R_model_numerator)){
     prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = data_censored)
   } else {
     prob_R1_numerator <- rep(1, times = nrow(data_censored))
   }
+  if (!return_model_fits){
+    fit_R_numerator <- NULL
+  }
+
+  # Compute IP weights based on censored data set
   weights_A <- unname(unlist(tapply(1 / prob_A1, data_censored$id, FUN = cumprod)))
   weights_R <- ifelse(data_censored$R == 1, prob_R1_numerator / prob_R1_denominator, 0)
   data_censored$weights <- weights_A * weights_R

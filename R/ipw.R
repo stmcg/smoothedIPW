@@ -157,8 +157,8 @@ ipw <- function(data,
   }
 
   # Check person-time format of data
-  if (!all.equal(sort(as.numeric(unique(data$id))),
-                 1:length(unique(data$id)))){
+  if (!isTRUE(all.equal(sort(as.numeric(unique(data$id))),
+                        1:length(unique(data$id))))){
     stop("Individual ID values (specified by the 'id' column in 'data') should range from 1 to n, where n denotes the number of unique individuals.")
   }
   problematic_ids <- tapply(data$time, data$id,
@@ -184,6 +184,15 @@ ipw <- function(data,
     outcome_times <- 0:max(data$time)
   }
   any_deaths <- 'D' %in% colnames(data)
+  if (is.factor(data$Y)){
+    outcome_type <- 'binary'
+  } else {
+    outcome_type <- 'continuous'
+    if (length(unique(data$Y)) == 2){
+      warning("The outcome is treated as a continuous variable, although only two levels where detected.
+              To treat the outcome as a binary variable, the column 'Y' in the observed dataset should be a factor variable.")
+    }
+  }
 
   if (!any_deaths){
     # Pooled/nonpooled IPW without deaths
@@ -196,7 +205,8 @@ ipw <- function(data,
                       Y_model = Y_model,
                       truncation_percentile = truncation_percentile,
                       return_model_fits = return_model_fits,
-                      trim_returned_models = trim_returned_models)
+                      trim_returned_models = trim_returned_models,
+                      outcome_type = outcome_type)
     est <- res$est
     model_fits <- res$model_fits
   } else {
@@ -223,7 +233,8 @@ ipw <- function(data,
                                Y_model = Y_model,
                                truncation_percentile = truncation_percentile,
                                return_model_fits = return_model_fits,
-                               trim_returned_models = trim_returned_models)
+                               trim_returned_models = trim_returned_models,
+                               outcome_type = outcome_type)
         if (i == 1){
           est <- res_temp$est
         } else {
@@ -258,7 +269,8 @@ ipw <- function(data,
                                  Y_model = Y_model,
                                  truncation_percentile = truncation_percentile,
                                  return_model_fits = return_model_fits,
-                                 trim_returned_models = trim_returned_models)
+                                 trim_returned_models = trim_returned_models,
+                                 outcome_type = outcome_type)
           if (i == 1){
             est <- res_temp$est
           } else {
@@ -293,7 +305,8 @@ ipw <- function(data,
                                 truncation_percentile = truncation_percentile,
                                 return_model_fits = return_model_fits,
                                 only_compute_weights = TRUE,
-                                trim_returned_models = trim_returned_models)
+                                trim_returned_models = trim_returned_models,
+                                outcome_type = outcome_type)
           df_stack <- res_temp$df_stack
           if (return_model_fits){
             model_fits[[j + 1]] <- res_temp$model_fits
@@ -308,7 +321,12 @@ ipw <- function(data,
         # Step 2: Fit weighted outcome model
         error_message_fit <- NULL
         fit_Y <- tryCatch(
-          stats::lm(formula = Y_model, data = dat_stacked, weights = weights),
+          if (outcome_type == 'binary'){
+            stats::glm(formula = Y_model, data = dat_stacked, family = stats::binomial(), weights = weights)
+          } else {
+            stats::glm(formula = Y_model, data = dat_stacked, family = stats::gaussian(), weights = weights)
+          }
+          ,
           error = function(e) {
             error_message_fit <<- paste0("Error in fitting the model for Y: ", conditionMessage(e))
             NULL
@@ -339,7 +357,7 @@ ipw <- function(data,
           for (z_val in z_levels){
             col_index <- col_index + 1
             data_temp$Z <- z_val
-            est[row_index, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+            est[row_index, col_index] <- mean(stats::predict(fit_Y, type = 'response', newdata = data_temp))
           }
         }
       }
@@ -368,7 +386,8 @@ ipw_helper <- function(data,
                 truncation_percentile = NULL,
                 return_model_fits = TRUE,
                 only_compute_weights = FALSE,
-                trim_returned_models){
+                trim_returned_models,
+                outcome_type){
 
   time_points <- length(outcome_times)
 
@@ -478,7 +497,12 @@ ipw_helper <- function(data,
   row_index <- 0
   if (pooled){
     fit_Y <- tryCatch(
-      stats::lm(formula = Y_model, data = data_censored, weights = weights),
+      if (outcome_type == 'binary'){
+        stats::glm(formula = Y_model, data = data_censored, family = stats::binomial(), weights = weights)
+      } else {
+        stats::glm(formula = Y_model, data = data_censored, family = stats::gaussian(), weights = weights)
+      }
+      ,
       error = function(e) {
         error_message_fit <<- paste0("Error in fitting the model for Y: ", conditionMessage(e))
         NULL
@@ -494,7 +518,7 @@ ipw_helper <- function(data,
       for (z_val in z_levels){
         col_index <- col_index + 1
         data_temp$Z <- z_val
-        est[row_index, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+        est[row_index, col_index] <- mean(stats::predict(fit_Y, type = 'response', newdata = data_temp))
       }
     }
     if (return_model_fits){
@@ -507,8 +531,14 @@ ipw_helper <- function(data,
     for (k in outcome_times){
       row_index <- row_index + 1
       fit_Y <- tryCatch(
-        stats::lm(Y_model, data = data_censored[data_censored$time == k,],
-                  weights = weights),
+        if (outcome_type == 'binary'){
+          stats::glm(Y_model, data = data_censored[data_censored$time == k,],
+                     family = stats::binomial(), weights = weights)
+        } else {
+          stats::glm(Y_model, data = data_censored[data_censored$time == k,],
+                     family = stats::gaussian(), weights = weights)
+        }
+        ,
         error = function(e) {
           error_message_fit <<- paste0(paste0("Error in fitting the model for Y at time ", k, ': '), conditionMessage(e))
           NULL
@@ -522,7 +552,7 @@ ipw_helper <- function(data,
       for (z_val in z_levels){
         col_index <- col_index + 1
         data_temp$Z <- z_val
-        est[row_index, col_index] <- mean(stats::predict(fit_Y, newdata = data_temp))
+        est[row_index, col_index] <- mean(stats::predict(fit_Y, type = 'response', newdata = data_temp))
       }
       if (return_model_fits){
         fit_Y_all[[k+1]] <- trim_glm(fit_Y, trim_returned_models = trim_returned_models)

@@ -5,7 +5,7 @@
 #' @param data Data table (or data frame) containing the observed data
 #' @param pooled Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.
 #' @param pooling_method Character string specify the pooled IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
-#' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean. The default is all time points in \code{data}.
+#' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability. The default is all time points in \code{data}.
 #' @param A_model Model statement for the treatment variable
 #' @param R_model_numerator Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
 #' @param R_model_denominator Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights
@@ -15,7 +15,7 @@
 #' @param trim_returned_models Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed dataset is large. By default, this argument is set to \code{FALSE}.
 #'
 #' @return A object of class "ipw". This object is a list that includes the following components:
-#' \item{est}{A data frame containing the counterfactual mean estimates for each medication at each time interval.}
+#' \item{est}{A data frame containing the counterfactual mean/probability estimates for each medication at each time interval.}
 #' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
 #'                   If the nonstacked pooled appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
 #'                   If the stacked pooled approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
@@ -26,7 +26,7 @@
 #'
 #' @examples
 #'
-#' ## Pooled IPW without deaths
+#' ## Pooled IPW without deaths (continuous outcome)
 #' data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
 #'                                  baseline_vars = 'L')
 #' res <- ipw(data = data_null_processed,
@@ -38,7 +38,7 @@
 #'            Y_model = Y ~ L_baseline * (time + Z))
 #' res$est
 #'
-#' ## Pooled IPW with deaths, nonstacked pooling method
+#' ## Pooled IPW with deaths, nonstacked pooling method (continuous outcome)
 #' data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_length = 2,
 #'                                         baseline_vars = 'L')
 #' res <- ipw(data = data_null_deaths_processed,
@@ -50,6 +50,23 @@
 #'            R_model_denominator = R ~ L + A + Z,
 #'            Y_model = Y ~ L_baseline * (time + Z))
 #' res$est
+#'
+#' ## Pooled IPW with deaths, stacked pooling method (binary outcome)
+#' \donttest{
+#' data_null_deaths_binary_processed <- prep_data(data = data_null_deaths_binary,
+#'                                                grace_period_length = 2,
+#'                                                baseline_vars = 'L')
+#' res <- ipw(data = data_null_deaths_binary_processed,
+#'            pooled = TRUE,
+#'            pooling_method = 'stacked',
+#'            outcome_times = c(6, 12, 18, 24),
+#'            A_model = A ~ L + Z,
+#'            R_model_numerator = R ~ L_baseline + Z,
+#'            R_model_denominator = R ~ L + A + Z,
+#'            Y_model = Y ~ L_baseline * (time + Z))
+#' res$est
+#' }
+
 #'
 #' @export
 ipw <- function(data,
@@ -369,7 +386,7 @@ ipw <- function(data,
   args$outcome_times <- outcome_times
   args$data <- NULL
 
-  out <- list(est = est, args = args, model_fits = model_fits)
+  out <- list(est = est, args = args, model_fits = model_fits, outcome_type = outcome_type)
   class(out) <- 'ipw'
   return(out)
 }

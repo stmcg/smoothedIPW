@@ -42,7 +42,8 @@ datagen <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, sigm
   return(temp_data)
 }
 
-datagen_with_deaths <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, beta_D, sigma_Y, U_lb, U_ub, m){
+datagen_with_deaths <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, beta_D, sigma_Y, U_lb, U_ub, m,
+                                outcome_type = 'continuous'){
   # Preallocate space in vectors
   time <- 0:time_points
   id <- rep(as.numeric(i), time_points+1)
@@ -61,8 +62,14 @@ datagen_with_deaths <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, 
   A[1] <- 1
   R[1] <- rbinom(1, 1, expit(beta_R[1] + beta_R[2] * A[1] + beta_R[3] * Z[1] + beta_R[4] * L[1]))
   if (R[1] == 1){
-    Y[1] <- rnorm(1, beta_Y[1] + beta_Y[2] * A[1] + beta_Y[3] * Z[1] + beta_Y[4] * L[1] + beta_Y[5] * U +
-                    beta_Y[6] * Z[1] * A[1] + beta_Y[7] * Z[1] * L[1] + beta_Y[8] * L[1] * A[1], sigma_Y)
+    if (outcome_type == 'continuous'){
+      Y[1] <- rnorm(1, beta_Y[1] + beta_Y[2] * A[1] + beta_Y[3] * Z[1] + beta_Y[4] * L[1] + beta_Y[5] * U +
+                      beta_Y[6] * Z[1] * A[1] + beta_Y[7] * Z[1] * L[1] + beta_Y[8] * L[1] * A[1], sigma_Y)
+    } else if (outcome_type == 'binary'){
+      Y[1] <- rbinom(1, 1, expit(beta_Y[1] + beta_Y[2] * A[1] + beta_Y[3] * Z[1] + beta_Y[4] * L[1] + beta_Y[5] * U +
+                                   beta_Y[6] * Z[1] * A[1] + beta_Y[7] * Z[1] * L[1] + beta_Y[8] * L[1] * A[1]))
+    }
+
   }
 
   # Follow-up times
@@ -75,8 +82,13 @@ datagen_with_deaths <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, 
     A[j] <- rbinom(1, 1, expit(beta_A[1] + beta_A[2] * A[j-1] +  beta_A[3] * Z[1] + beta_A[4] * L[j] + beta_A[5] * (j - 1)))
     R[j] <- rbinom(1, 1, expit(beta_R[1] + beta_R[2] * A[j] + beta_R[3] * Z[1] + beta_R[4] * L[j]))
     if (R[j] == 1){
-      Y[j] <- rnorm(1, beta_Y[1] + beta_Y[2] * A[j] + beta_Y[3] * Z[1] + beta_Y[4] * L[j] + beta_Y[5] * U +
-                      beta_Y[6] * Z[1] * A[j] - beta_Y[7] * Z[1] * L[j] + beta_Y[8] * L[j] * A[j] + beta_Y[9] * (j - 1), sigma_Y)
+      if (outcome_type == 'continuous'){
+        Y[j] <- rnorm(1, beta_Y[1] + beta_Y[2] * A[j] + beta_Y[3] * Z[1] + beta_Y[4] * L[j] + beta_Y[5] * U +
+                        beta_Y[6] * Z[1] * A[j] - beta_Y[7] * Z[1] * L[j] + beta_Y[8] * L[j] * A[j] + beta_Y[9] * (j - 1), sigma_Y)
+      } else if (outcome_type == 'binary'){
+        Y[j] <- rbinom(1, 1, expit(beta_Y[1] + beta_Y[2] * A[j] + beta_Y[3] * Z[1] + beta_Y[4] * L[j] + beta_Y[5] * U +
+                        beta_Y[6] * Z[1] * A[j] - beta_Y[7] * Z[1] * L[j] + beta_Y[8] * L[j] * A[j] + beta_Y[9] * (j - 1)))
+      }
     }
   }
 
@@ -124,3 +136,23 @@ data_null_deaths <- lapply(as.list(1:1000), FUN=function(ind){
 data_null_deaths <- rbindlist(data_null_deaths)
 
 usethis::use_data(data_null_deaths, overwrite = TRUE)
+
+
+set.seed(3456)
+data_null_deaths_binary <- lapply(as.list(1:1000), FUN=function(ind){
+  datagen_with_deaths(i = ind,
+                      time_points = 24,
+                      beta_L = c(0, 0.5, 0.25, 0.5, 0),
+                      beta_Z = c(0.5, -1),
+                      beta_A = c(0.5, 0.5, -0.25, 0.5, 0),
+                      beta_R = c(-1, 0.5, 0.25, -0.5),
+                      beta_Y = c(0, 0, 0, 0, 2, 0, 0, 0, 0),
+                      beta_D = c(-4.5, 1),
+                      U_lb = -1,
+                      U_ub = 1,
+                      m = 2,
+                      outcome_type = 'binary')
+})
+data_null_deaths_binary <- rbindlist(data_null_deaths_binary)
+
+usethis::use_data(data_null_deaths_binary, overwrite = TRUE)

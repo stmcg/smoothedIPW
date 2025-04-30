@@ -1,5 +1,7 @@
 data_null_processed <- prep_data(data_null, grace_period_length = 2, baseline_vars = 'L')
 data_null_deaths_processed <- prep_data(data_null_deaths, grace_period_length = 2, baseline_vars = 'L')
+data_null_deaths_binary_processed <- prep_data(data_null_deaths_binary, grace_period_length = 2, baseline_vars = 'L')
+
 
 z0_est_pooled_expected <- c(0.031534949,  0.027343466,  0.023151983,  0.018960500,  0.014769017,
                             0.010577534,  0.006386051,  0.002194568, -0.001996915, -0.006188398,
@@ -48,6 +50,14 @@ z1_est_pooled_stacked_expected <- c(-0.06730221, -0.08253691, -0.09827873, -0.11
                                     -0.18342506, -0.19785246, -0.21184516, -0.22712997, -0.24237198, -0.25715716, -0.27228614, -0.28641890,
                                     -0.30092673, -0.31628987, -0.33024245, -0.34481540, -0.35851065, -0.37254667, -0.38723987, -0.40177023,
                                     -0.41649961)
+
+z0_est_pooled_stacked_binary_expected <- c(0.2867749, 0.2856037, 0.2843047, 0.2829766, 0.2817799, 0.2803123, 0.2789753, 0.2778298, 0.2767138,
+                                           0.2753450, 0.2742037, 0.2729753, 0.2717795, 0.2704913, 0.2691981, 0.2678112, 0.2666467, 0.2653856,
+                                           0.2639812, 0.2628156, 0.2615856, 0.2604200, 0.2593965, 0.2581328, 0.2567171)
+
+z1_est_pooled_stacked_binary_expected <- c(0.2767358, 0.2755453, 0.2742768, 0.2729904, 0.2717842, 0.2704116, 0.2691188, 0.2679439, 0.2667875,
+                                           0.2654745, 0.2643026, 0.2630766, 0.2618710, 0.2606076, 0.2593410, 0.2580153, 0.2568292, 0.2555823,
+                                           0.2542447, 0.2530578, 0.2518303, 0.2506437, 0.2495477, 0.2482989, 0.2469529)
 
 test_that("pooled ipw gives correct point estimates", {
   res_pooled <- ipw(data = data_null_processed,
@@ -132,4 +142,17 @@ test_that("pooled, stacked ipw gives correct point estimates", {
 
   expect_equal(res_pooled_stacked$est[, 'Z=0'], z0_est_pooled_stacked_expected, tolerance = 1e-6)
   expect_equal(res_pooled_stacked$est[, 'Z=1'], z1_est_pooled_stacked_expected, tolerance = 1e-6)
+})
+
+test_that("pooled, stacked ipw gives correct point estimates (binary outcome)", {
+  res_pooled_stacked_binary <- ipw(data = data_null_deaths_binary_processed,
+                            pooled = TRUE,
+                            pooling_method = 'stacked',
+                            A_model = A ~ L + Z,
+                            R_model_numerator = R ~ L_baseline + Z,
+                            R_model_denominator = R ~ L + A + Z,
+                            Y_model = Y ~ L_baseline * (time + Z))
+
+  expect_equal(res_pooled_stacked_binary$est[, 'Z=0'], z0_est_pooled_stacked_binary_expected, tolerance = 1e-6)
+  expect_equal(res_pooled_stacked_binary$est[, 'Z=1'], z1_est_pooled_stacked_binary_expected, tolerance = 1e-6)
 })

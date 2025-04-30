@@ -1,6 +1,6 @@
 #' Bootstrap-based confidence intervals
 #'
-#' This function applies nonparametric bootstrap to construct confidence intervals around the counterfactual mean estimates obtained by \code{\link{ipw}}.
+#' This function applies nonparametric bootstrap to construct confidence intervals around the counterfactual mean/probability estimates obtained by \code{\link{ipw}}.
 #'
 #' @param ipw_res Output from the \code{ipw} function.
 #' @param data Data table containing the observed data
@@ -8,7 +8,7 @@
 #' @param conf_level Numeric scalar specifying the confidence level for the confidence intervals. The default is \code{0.95}.
 #'
 #' @return A list that includes the following components:
-#' \item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean under the treatment regime indexed by \eqn{z}.}
+#' \item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z}.}
 #' \item{res_boot_all}{A three dimensional array containing all the bootstrap replicates. The first dimension corresponds to the bootstrap replicate; The second dimension corresponds to the time interval; The third dimension corresponds to the medication \eqn{z} level.}
 #'
 #' @details

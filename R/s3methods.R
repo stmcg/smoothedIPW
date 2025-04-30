@@ -26,6 +26,10 @@ print.ipw <- function(x, ...) {
     stop("Argument 'x' must be an object of class \"ipw\".")
   }
 
-  cat('INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME MEAN \n\n')
+  if (x$outcome_type == 'continuous'){
+    cat('INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME MEAN \n\n')
+  } else if (x$outcome_type == 'binary'){
+    cat('INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME PROBABILITY \n\n')
+  }
   print(x$est, row.names = FALSE)
 }

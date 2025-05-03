@@ -15,7 +15,6 @@
 #' \itemize{
 #' \item Adds a column \code{C_artificial} which indicates when an individual should be artificially censored from the data when applying inverse probability weighting.
 #' \item Adds a column \code{A_model_eligible} which indicates what records should be used for fitting the treatment adherence model.
-#' \item Adds a column \code{R_model_eligible} which indicates what records should be used for fitting the outcome measurement model.
 #' \item If \code{baseline_vars} is supplied, it adds columns corresponding to the baseline value of these variables These columns have the name \code{_baseline} appended to them.
 #' \item If \code{lag_vars} is supplied, it adds columns corresponding to the lagged value of these variables. For each of these variables, additional columns will be created for 1, ..., \code{n_lags} lags of the variable.
 #' }
@@ -59,7 +58,6 @@ prep_data <- function(data, grace_period_length = 0,
   }, by = id]
 
   data[, A_model_eligible := ifelse(end_of_grace_period == 1 & time <= first_violation_time, 1, 0)]
-  data[, R_model_eligible :=  time < first_violation_time]
   data[, C_artificial := ifelse(time >= first_violation_time, 1, 0)]
 
   data[, end_of_grace_period := NULL]

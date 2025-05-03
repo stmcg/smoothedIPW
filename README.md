@@ -134,34 +134,34 @@ data_null_processed[id == 2,]
 #> 24:     2    23     1     0     1     0          NA                0
 #> 25:     2    24     0     0     1     0          NA                0
 #>        id  time     L     Z     A     R           Y A_model_eligible
-#>     R_model_eligible C_artificial L_baseline
-#>               <lgcl>        <num>      <int>
-#>  1:             TRUE            0          1
-#>  2:             TRUE            0          1
-#>  3:             TRUE            0          1
-#>  4:             TRUE            0          1
-#>  5:             TRUE            0          1
-#>  6:             TRUE            0          1
-#>  7:             TRUE            0          1
-#>  8:             TRUE            0          1
-#>  9:            FALSE            1          1
-#> 10:            FALSE            1          1
-#> 11:            FALSE            1          1
-#> 12:            FALSE            1          1
-#> 13:            FALSE            1          1
-#> 14:            FALSE            1          1
-#> 15:            FALSE            1          1
-#> 16:            FALSE            1          1
-#> 17:            FALSE            1          1
-#> 18:            FALSE            1          1
-#> 19:            FALSE            1          1
-#> 20:            FALSE            1          1
-#> 21:            FALSE            1          1
-#> 22:            FALSE            1          1
-#> 23:            FALSE            1          1
-#> 24:            FALSE            1          1
-#> 25:            FALSE            1          1
-#>     R_model_eligible C_artificial L_baseline
+#>     C_artificial L_baseline
+#>            <num>      <int>
+#>  1:            0          1
+#>  2:            0          1
+#>  3:            0          1
+#>  4:            0          1
+#>  5:            0          1
+#>  6:            0          1
+#>  7:            0          1
+#>  8:            0          1
+#>  9:            1          1
+#> 10:            1          1
+#> 11:            1          1
+#> 12:            1          1
+#> 13:            1          1
+#> 14:            1          1
+#> 15:            1          1
+#> 16:            1          1
+#> 17:            1          1
+#> 18:            1          1
+#> 19:            1          1
+#> 20:            1          1
+#> 21:            1          1
+#> 22:            1          1
+#> 23:            1          1
+#> 24:            1          1
+#> 25:            1          1
+#>     C_artificial L_baseline
 ```
 
 ###### Point estimation

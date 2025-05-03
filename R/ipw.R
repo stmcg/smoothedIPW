@@ -201,8 +201,8 @@ ipw <- function(data,
   if (!'A_model_eligible' %in% colnames(data)){
     stop("The observed data must include a column called 'A_model_eligible' indicating what records should be used for fitting the treatment adherence model.")
   }
-  if (!'R_model_eligible' %in% colnames(data)){
-    stop("The observed data must include a column called 'R_model_eligible' indicating what records should be used for fitting the outcome measurement model.")
+  if (!'R_model_denominator_eligible' %in% colnames(data)){
+    data$R_model_denominator_eligible <- !data$C_artificial
   }
 
   # Set parameters
@@ -446,7 +446,7 @@ ipw_helper <- function(data,
 
   # Measurement model (denominator) and weights
   fit_R_denominator <- tryCatch(
-    stats::glm(R_model_denominator, family = 'binomial', data = data[data$R_model_eligible == 1,]),
+    stats::glm(R_model_denominator, family = 'binomial', data = data[data$R_model_denominator_eligible == 1,]),
     error = function(e) {
       error_message_fit <<- paste0("Error in fitting the model for R (denominator): ", conditionMessage(e))
       NULL

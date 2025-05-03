@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The `pooledipw` package implements inverse probability weighted (IPW) methods to estimate effects of generalized time-varying treatment strategies on sparsely measured continuous outcomes in electronic health records (EHR) data. Specifically, this package implements pooled and nonpooled IPW methods as described in McGrath et al. (in preparation). 
+The `pooledipw` package implements inverse probability weighted (IPW) methods to estimate effects of generalized time-varying treatment strategies on sparsely measured continuous outcomes in electronic health records (EHR) data. Specifically, this package implements pooled and nonpooled IPW methods as described in McGrath et al. (in preparation). In settings with truncation by death, two different pooled IPW methods (i.e., the stacked and nonstacked methods) are available, which rely on different assumptions to smooth over time.
 
 ## Installation
 

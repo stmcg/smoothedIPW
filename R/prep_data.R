@@ -15,6 +15,7 @@
 #' \itemize{
 #' \item Adds a column \code{C_artificial} which indicates when an individual should be artificially censored from the data when applying inverse probability weighting.
 #' \item Adds a column \code{A_model_eligible} which indicates what records should be used for fitting the treatment adherence model.
+#' \item Adds a column \code{R_model_eligible} which indicates what records should be used for fitting the outcome measurement model.
 #' \item If \code{baseline_vars} is supplied, it adds columns corresponding to the baseline value of these variables These columns have the name \code{_baseline} appended to them.
 #' \item If \code{lag_vars} is supplied, it adds columns corresponding to the lagged value of these variables. For each of these variables, additional columns will be created for 1, ..., \code{n_lags} lags of the variable.
 #' }
@@ -29,24 +30,6 @@ prep_data <- function(data, grace_period_length = 0,
                       baseline_vars = NULL,
                       lag_vars = NULL,
                       n_lags = 1){
-
-  # Inefficient version of the code
-  # data[, C_artificial := 0]
-  # data[, end_of_grace_period := 0]
-  # for(i in 1:nrow(data)){
-  #   if (data[i, 'time'] == 0){
-  #     # Baseline
-  #     count_not_adhered_until_now <- 0
-  #   } else {
-  #     # Follow-up
-  #     count_not_adhered_until_now <- (count_not_adhered_until_now + 1) * (1 - data[i-1, 'A'])
-  #     # data[i, 'end_of_grace_period'] <- ifelse(count_not_adhered_until_now == grace_period_length, 1, 0)
-  #     # if ((data[i, 'A'] == 0 & data[i, 'end_of_grace_period'] == 1) |
-  #     #     data[i - 1, 'C_artificial'] == 1){
-  #     #   data[i, 'C_artificial'] <- 1
-  #     # }
-  #   }
-  # }
 
   if (!is.data.table(data)){
     data <- as.data.table(data)
@@ -66,15 +49,22 @@ prep_data <- function(data, grace_period_length = 0,
     }]
     data[, end_of_grace_period := as.integer(count_not_adhered_until_now == grace_period_length)]
     data[, count_not_adhered_until_now := NULL]
-    data[, A_model_eligible := end_of_grace_period]
   } else {
-    data[, A_model_eligible := as.integer(time > 0)]
+    data[, end_of_grace_period := 1]
   }
+  data[, protocol_violation := end_of_grace_period & A == 0]
+  data[, first_violation_time := {
+    idx <- which(protocol_violation)
+    if (length(idx) > 0) as.double(time[idx[1]]) else Inf
+  }, by = id]
 
-  # Adding indicator of artificial censoring
-  data[, C_artificial_temp := as.integer(A == 0 & A_model_eligible == 1)]
-  data[, C_artificial := as.integer(cumsum(C_artificial_temp) >= 1), by = id]
-  data[, C_artificial_temp := NULL]
+  data[, A_model_eligible := ifelse(end_of_grace_period == 1 & time <= first_violation_time, 1, 0)]
+  data[, R_model_eligible :=  time < first_violation_time]
+  data[, C_artificial := ifelse(time >= first_violation_time, 1, 0)]
+
+  data[, end_of_grace_period := NULL]
+  data[, protocol_violation := NULL]
+  data[, first_violation_time := NULL]
 
   # Adding baseline covariates
   if (!is.null(baseline_vars)){

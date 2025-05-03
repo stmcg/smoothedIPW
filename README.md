@@ -11,6 +11,9 @@ methods to estimate effects of generalized time-varying treatment
 strategies on sparsely measured continuous outcomes in electronic health
 records (EHR) data. Specifically, this package implements pooled and
 nonpooled IPW methods as described in McGrath et al. (in preparation).
+In settings with truncation by death, two different pooled IPW methods
+(i.e., the stacked and nonstacked methods) are available, which rely on
+different assumptions to smooth over time.
 
 ## Installation
 
@@ -103,62 +106,62 @@ These columns can be added by the `prep_data` function, as shown below:
 data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
 data_null_processed[id == 2,]
-#>        id  time     L     Z     A     R           Y end_of_grace_period
-#>     <num> <int> <int> <int> <num> <int>       <num>               <int>
-#>  1:     2     0     1     0     1     1  -6.8964763                   0
-#>  2:     2     1     1     0     1     0          NA                   0
-#>  3:     2     2     1     0     1     1 -10.3900416                   0
-#>  4:     2     3     1     0     1     0          NA                   0
-#>  5:     2     4     1     0     1     0          NA                   0
-#>  6:     2     5     1     0     1     0          NA                   0
-#>  7:     2     6     1     0     0     0          NA                   0
-#>  8:     2     7     0     0     0     1  -4.2866350                   0
-#>  9:     2     8     1     0     0     1  11.3850700                   1
-#> 10:     2     9     0     0     1     0          NA                   0
-#> 11:     2    10     1     0     1     0          NA                   0
-#> 12:     2    11     0     0     1     0          NA                   0
-#> 13:     2    12     1     0     0     0          NA                   0
-#> 14:     2    13     1     0     1     0          NA                   0
-#> 15:     2    14     0     0     1     1  -3.6372290                   0
-#> 16:     2    15     1     0     1     1  -0.5293098                   0
-#> 17:     2    16     0     0     1     0          NA                   0
-#> 18:     2    17     1     0     0     0          NA                   0
-#> 19:     2    18     1     0     1     1  -2.9451809                   0
-#> 20:     2    19     1     0     1     0          NA                   0
-#> 21:     2    20     1     0     1     0          NA                   0
-#> 22:     2    21     1     0     1     1  -3.6248307                   0
-#> 23:     2    22     0     0     1     0          NA                   0
-#> 24:     2    23     1     0     1     0          NA                   0
-#> 25:     2    24     0     0     1     0          NA                   0
-#>        id  time     L     Z     A     R           Y end_of_grace_period
-#>     A_model_eligible C_artificial L_baseline
-#>                <int>        <int>      <int>
-#>  1:                0            0          1
-#>  2:                0            0          1
-#>  3:                0            0          1
-#>  4:                0            0          1
-#>  5:                0            0          1
-#>  6:                0            0          1
-#>  7:                0            0          1
-#>  8:                0            0          1
-#>  9:                1            1          1
-#> 10:                0            1          1
-#> 11:                0            1          1
-#> 12:                0            1          1
-#> 13:                0            1          1
-#> 14:                0            1          1
-#> 15:                0            1          1
-#> 16:                0            1          1
-#> 17:                0            1          1
-#> 18:                0            1          1
-#> 19:                0            1          1
-#> 20:                0            1          1
-#> 21:                0            1          1
-#> 22:                0            1          1
-#> 23:                0            1          1
-#> 24:                0            1          1
-#> 25:                0            1          1
-#>     A_model_eligible C_artificial L_baseline
+#>        id  time     L     Z     A     R           Y A_model_eligible
+#>     <num> <int> <int> <int> <num> <int>       <num>            <num>
+#>  1:     2     0     1     0     1     1  -6.8964763                0
+#>  2:     2     1     1     0     1     0          NA                0
+#>  3:     2     2     1     0     1     1 -10.3900416                0
+#>  4:     2     3     1     0     1     0          NA                0
+#>  5:     2     4     1     0     1     0          NA                0
+#>  6:     2     5     1     0     1     0          NA                0
+#>  7:     2     6     1     0     0     0          NA                0
+#>  8:     2     7     0     0     0     1  -4.2866350                0
+#>  9:     2     8     1     0     0     1  11.3850700                1
+#> 10:     2     9     0     0     1     0          NA                0
+#> 11:     2    10     1     0     1     0          NA                0
+#> 12:     2    11     0     0     1     0          NA                0
+#> 13:     2    12     1     0     0     0          NA                0
+#> 14:     2    13     1     0     1     0          NA                0
+#> 15:     2    14     0     0     1     1  -3.6372290                0
+#> 16:     2    15     1     0     1     1  -0.5293098                0
+#> 17:     2    16     0     0     1     0          NA                0
+#> 18:     2    17     1     0     0     0          NA                0
+#> 19:     2    18     1     0     1     1  -2.9451809                0
+#> 20:     2    19     1     0     1     0          NA                0
+#> 21:     2    20     1     0     1     0          NA                0
+#> 22:     2    21     1     0     1     1  -3.6248307                0
+#> 23:     2    22     0     0     1     0          NA                0
+#> 24:     2    23     1     0     1     0          NA                0
+#> 25:     2    24     0     0     1     0          NA                0
+#>        id  time     L     Z     A     R           Y A_model_eligible
+#>     R_model_eligible C_artificial L_baseline
+#>               <lgcl>        <num>      <int>
+#>  1:             TRUE            0          1
+#>  2:             TRUE            0          1
+#>  3:             TRUE            0          1
+#>  4:             TRUE            0          1
+#>  5:             TRUE            0          1
+#>  6:             TRUE            0          1
+#>  7:             TRUE            0          1
+#>  8:             TRUE            0          1
+#>  9:            FALSE            1          1
+#> 10:            FALSE            1          1
+#> 11:            FALSE            1          1
+#> 12:            FALSE            1          1
+#> 13:            FALSE            1          1
+#> 14:            FALSE            1          1
+#> 15:            FALSE            1          1
+#> 16:            FALSE            1          1
+#> 17:            FALSE            1          1
+#> 18:            FALSE            1          1
+#> 19:            FALSE            1          1
+#> 20:            FALSE            1          1
+#> 21:            FALSE            1          1
+#> 22:            FALSE            1          1
+#> 23:            FALSE            1          1
+#> 24:            FALSE            1          1
+#> 25:            FALSE            1          1
+#>     R_model_eligible C_artificial L_baseline
 ```
 
 ###### Point estimation
@@ -193,10 +196,10 @@ res_est
 #> INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME MEAN 
 #> 
 #>  time          Z=0         Z=1
-#>     6  0.006386051 -0.03707015
-#>    12 -0.018762847 -0.06221905
-#>    18 -0.043911745 -0.08736795
-#>    24 -0.069060643 -0.11251685
+#>     6  0.007124865 -0.03536354
+#>    12 -0.019445369 -0.06193377
+#>    18 -0.046015603 -0.08850401
+#>    24 -0.072585838 -0.11507424
 ```
 
 ###### Interval estimation
@@ -212,15 +215,15 @@ res_ci <- get_CI(res_est, data = data_null_processed, n_boot = 10)
 res_ci$res_boot
 #> $`0`
 #>      Time     Estimate   CI Lower   CI Upper
-#> [1,]    6  0.006386051 -0.1806667 0.13563137
-#> [2,]   12 -0.018762847 -0.2520764 0.08697863
-#> [3,]   18 -0.043911745 -0.3234861 0.04440936
-#> [4,]   24 -0.069060643 -0.3948959 0.04837243
+#> [1,]    6  0.007124865 -0.1774043 0.13580696
+#> [2,]   12 -0.019445369 -0.2534594 0.08688074
+#> [3,]   18 -0.046015603 -0.3295146 0.04689198
+#> [4,]   24 -0.072585838 -0.4055698 0.05887030
 #> 
 #> $`1`
 #>      Time    Estimate   CI Lower   CI Upper
-#> [1,]    6 -0.03707015 -0.2021440 0.05154113
-#> [2,]   12 -0.06221905 -0.2116114 0.01953319
-#> [3,]   18 -0.08736795 -0.2880186 0.03449785
-#> [4,]   24 -0.11251685 -0.4088479 0.05560321
+#> [1,]    6 -0.03536354 -0.2027095 0.05405786
+#> [2,]   12 -0.06193377 -0.2137749 0.02011806
+#> [3,]   18 -0.08850401 -0.2910591 0.03815230
+#> [4,]   24 -0.11507424 -0.4132964 0.06315579
 ```

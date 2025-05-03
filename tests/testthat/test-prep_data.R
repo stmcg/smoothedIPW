@@ -47,7 +47,7 @@ datagen <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, beta_Y, sigm
     }
 
     count_not_adhered <- (count_not_adhered + 1) * (1 - A[j-1])
-    G[j] <- ifelse(count_not_adhered == m, 1, 0)
+    G[j] <- ifelse(count_not_adhered == m & all(C_artificial[1:(j - 1)] == 0), 1, 0)
     if ((A[j] == 0 & G[j] == 1) | C_artificial[j-1] == 1){
       C_artificial[j] <- 1
     } else {

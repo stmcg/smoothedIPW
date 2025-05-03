@@ -98,6 +98,12 @@ ipw <- function(data,
       stop('The argument truncation_percentile must be beween 0 and 1')
     }
   }
+  if (!'time' %in% colnames(data)){
+    stop("The observed data must include a column called 'time' indicating the time interval.")
+  }
+  if (!'id' %in% colnames(data)){
+    stop("The observed data must include a column called 'id' indicating the participant ID number.")
+  }
 
   # Check A_model
   if (!inherits(A_model, "formula")) {
@@ -194,6 +200,9 @@ ipw <- function(data,
   }
   if (!'A_model_eligible' %in% colnames(data)){
     stop("The observed data must include a column called 'A_model_eligible' indicating what records should be used for fitting the treatment adherence model.")
+  }
+  if (!'R_model_eligible' %in% colnames(data)){
+    stop("The observed data must include a column called 'R_model_eligible' indicating what records should be used for fitting the outcome measurement model.")
   }
 
   # Set parameters
@@ -437,7 +446,7 @@ ipw_helper <- function(data,
 
   # Measurement model (denominator) and weights
   fit_R_denominator <- tryCatch(
-    stats::glm(R_model_denominator, family = 'binomial', data = data),
+    stats::glm(R_model_denominator, family = 'binomial', data = data[data$R_model_eligible == 1,]),
     error = function(e) {
       error_message_fit <<- paste0("Error in fitting the model for R (denominator): ", conditionMessage(e))
       NULL

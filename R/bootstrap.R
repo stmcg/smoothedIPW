@@ -48,7 +48,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
 
   outcome_times <- eval(ipw_res$args$outcome_times)
   time_points <- length(outcome_times)
-  z_levels <- unique(data$Z)
+  z_levels <- sort(unique(data$Z))
   n_z <- length(z_levels)
 
   # Step 1: Perform bootstrapping

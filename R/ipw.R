@@ -363,7 +363,7 @@ ipw <- function(data,
         }
 
         # Step 3: Estimating counterfactual outcome means
-        z_levels <- unique(data$Z)
+        z_levels <- sort(unique(data$Z))
         n_z <- length(z_levels)
         est <- matrix(NA, nrow = length(outcome_times), ncol = n_z + 1)
         est[, 1] <- outcome_times
@@ -512,7 +512,7 @@ ipw_helper <- function(data,
   }
 
   # Preparing data sets for estimating counterfactual outcome means
-  z_levels <- unique(data$Z)
+  z_levels <- sort(unique(data$Z))
   n_z <- length(z_levels)
   est <- matrix(NA, nrow = time_points, ncol = n_z + 1)
   est[, 1] <- outcome_times

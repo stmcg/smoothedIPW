@@ -6,9 +6,12 @@
 #' @param data Data table containing the observed data
 #' @param n_boot Numeric scalar specifying the number of bootstrap replicates to use
 #' @param conf_level Numeric scalar specifying the confidence level for the confidence intervals. The default is \code{0.95}.
+#' @param reference_z_value Scalar specifying the value of \eqn{z} considered as the reference level when forming contrasts. See also argument \code{contrast_type}.
+#' @param contrast_type Character string specifying the type of contrast. The options are \code{"difference"} (for the difference of means/probabilities) and \code{"ratio"} (for the ratio of means/probabilities).
 #'
 #' @return A list that includes the following components:
 #' \item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z}.}
+#' \item{res_boot_contrast}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the contrast (difference or ratio) counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z} compared to the counterfactual outcome mean/probability under the treatment regime indexed by the reference value.}
 #' \item{res_boot_all}{A three dimensional array containing all the bootstrap replicates. The first dimension corresponds to the bootstrap replicate; The second dimension corresponds to the time interval; The third dimension corresponds to the medication \eqn{z} level.}
 #'
 #' @details
@@ -33,7 +36,8 @@
 #'
 #' @export
 
-get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
+get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
+                   reference_z_value, contrast_type = 'difference'){
   # Check input
   if (missing(n_boot)){
     stop('The argument n_boot must be specified')
@@ -50,6 +54,19 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
   time_points <- length(outcome_times)
   z_levels <- sort(unique(data$Z))
   n_z <- length(z_levels)
+
+  if (missing(reference_z_value)){
+    reference_z_value <- z_levels[1]
+  } else {
+    if (!reference_z_value %in% z_levels){
+      stop("Invalid value for 'reference_z_value'. The argument 'reference_z_value' must be set to a value of Z appearing in 'data'.")
+    }
+  }
+  reference_z_index <- which(z_levels == reference_z_value)
+
+  if (!contrast_type %in% c('difference', 'ratio')){
+    stop("Invalid value for 'contrast_type'. The argument 'contrast_type' must be set to 'difference' or 'ratio'.")
+  }
 
   # Step 1: Perform bootstrapping
   res_boot_all <- array(NA, dim = c(n_boot, time_points, n_z))
@@ -80,10 +97,12 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
 
   # Step 2: Compute CI
   alpha <- 1 - conf_level
-  res_boot <- vector(mode = 'list', length = n_z)
+  res_boot <- res_boot_contrast <- vector(mode = 'list', length = n_z)
+  res_boot_z_reference <- res_boot_all[, , reference_z_index]
+
   for (j in 1:n_z){
-    res_boot_single <- matrix(NA, nrow = time_points, ncol = 4)
-    colnames(res_boot_single) <- c('Time', 'Estimate', 'CI Lower', 'CI Upper')
+    res_boot_single <- res_boot_contrast_single <- matrix(NA, nrow = time_points, ncol = 4)
+    colnames(res_boot_single) <- colnames(res_boot_contrast_single) <- c('Time', 'Estimate', 'CI Lower', 'CI Upper')
 
     z_val <- z_levels[j]
     res_boot_z <- res_boot_all[, , j]
@@ -91,19 +110,38 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
     res_boot_single[, 1] <- ipw_res$est[, 1]
     res_boot_single[, 2] <- ipw_res$est[, paste0('Z=', z_val)]
 
+    res_boot_contrast_single[, 1] <- ipw_res$est[, 1]
+    if (contrast_type == 'difference'){
+      res_boot_contrast_single[, 2] <- ipw_res$est[, paste0('Z=', z_val)] - ipw_res$est[, paste0('Z=', reference_z_value)]
+    } else if (contrast_type == 'ratio'){
+      res_boot_contrast_single[, 2] <- ipw_res$est[, paste0('Z=', z_val)] / ipw_res$est[, paste0('Z=', reference_z_value)]
+    }
+
     if (time_points > 1){
       for (i in 1:time_points){
-        res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2),
-                                                       na.rm = TRUE)
+        res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2), na.rm = TRUE)
+        if (contrast_type == 'difference'){
+          res_boot_contrast_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i] - res_boot_z_reference[, i], probs = c(alpha / 2, 1 - alpha / 2), na.rm = TRUE)
+        } else if (contrast_type == 'ratio'){
+          res_boot_contrast_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i] / res_boot_z_reference[, i], probs = c(alpha / 2, 1 - alpha / 2), na.rm = TRUE)
+        }
       }
     } else {
-      res_boot_single[1, c(3, 4)] <- stats::quantile(res_boot_z, probs = c(alpha / 2, 1 - alpha / 2),
-                                                     na.rm = TRUE)
+      res_boot_single[1, c(3, 4)] <- stats::quantile(res_boot_z, probs = c(alpha / 2, 1 - alpha / 2), na.rm = TRUE)
+      if (contrast_type == 'difference'){
+        res_boot_contrast_single[1, c(3, 4)] <- stats::quantile(res_boot_z - res_boot_z_reference, probs = c(alpha / 2, 1 - alpha / 2), na.rm = TRUE)
+      } else if (contrast_type == 'ratio'){
+        res_boot_contrast_single[1, c(3, 4)] <- stats::quantile(res_boot_z / res_boot_z_reference, probs = c(alpha / 2, 1 - alpha / 2), na.rm = TRUE)
+      }
+    }
+    if (j != reference_z_index){
+      res_boot_contrast[[j]] <- res_boot_contrast_single
     }
     res_boot[[j]] <- res_boot_single
   }
-  names(res_boot) <- z_levels
-  return(list(res_boot = res_boot, res_boot_all = res_boot_all))
+  names(res_boot) <- names(res_boot_contrast) <- z_levels
+  return(list(res_boot = res_boot, res_boot_contrast = res_boot_contrast,
+              res_boot_all = res_boot_all))
 }
 
 #' @import data.table

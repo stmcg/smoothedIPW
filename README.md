@@ -204,10 +204,10 @@ res_est
 
 ###### Interval estimation
 
-To obtain 95% confidence intervals around the estimated counterfactual
-outcome means, we can apply the `get_CI` function. It constructs
-percentile-based bootstrap confidence intervals using `n_boot` bootstrap
-replicates. We use 10 bootstrap replicates for ease of computation.
+To obtain 95% confidence intervals around our estimates, we can apply
+the `get_CI` function. It constructs percentile-based bootstrap
+confidence intervals using `n_boot` bootstrap replicates. We use 10
+bootstrap replicates for ease of computation.
 
 ``` r
 set.seed(1234)

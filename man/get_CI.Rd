@@ -4,7 +4,14 @@
 \alias{get_CI}
 \title{Bootstrap-based confidence intervals}
 \usage{
-get_CI(ipw_res, data, n_boot, conf_level = 0.95)
+get_CI(
+  ipw_res,
+  data,
+  n_boot,
+  conf_level = 0.95,
+  reference_z_value,
+  contrast_type = "difference"
+)
 }
 \arguments{
 \item{ipw_res}{Output from the \code{ipw} function.}
@@ -14,10 +21,15 @@ get_CI(ipw_res, data, n_boot, conf_level = 0.95)
 \item{n_boot}{Numeric scalar specifying the number of bootstrap replicates to use}
 
 \item{conf_level}{Numeric scalar specifying the confidence level for the confidence intervals. The default is \code{0.95}.}
+
+\item{reference_z_value}{Scalar specifying the value of \eqn{z} considered as the reference level when forming contrasts. See also argument \code{contrast_type}.}
+
+\item{contrast_type}{Character string specifying the type of contrast. The options are \code{"difference"} (for the difference of means/probabilities) and \code{"ratio"} (for the ratio of means/probabilities).}
 }
 \value{
 A list that includes the following components:
 \item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z}.}
+\item{res_boot_contrast}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the contrast (difference or ratio) counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z} compared to the counterfactual outcome mean/probability under the treatment regime indexed by the reference value.}
 \item{res_boot_all}{A three dimensional array containing all the bootstrap replicates. The first dimension corresponds to the bootstrap replicate; The second dimension corresponds to the time interval; The third dimension corresponds to the medication \eqn{z} level.}
 }
 \description{

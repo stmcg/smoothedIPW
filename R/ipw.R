@@ -348,9 +348,9 @@ ipw <- function(data,
         error_message_fit <- NULL
         fit_Y <- tryCatch(
           if (outcome_type == 'binary'){
-            stats::glm(formula = Y_model, data = dat_stacked, family = stats::binomial(), weights = weights)
+            stats::glm(formula = Y_model, data = dat_stacked[dat_stacked$weights > 0,], family = stats::binomial(), weights = weights)
           } else {
-            stats::glm(formula = Y_model, data = dat_stacked, family = stats::gaussian(), weights = weights)
+            stats::glm(formula = Y_model, data = dat_stacked[dat_stacked$weights > 0,], family = stats::gaussian(), weights = weights)
           }
           ,
           error = function(e) {
@@ -558,10 +558,10 @@ ipw_helper <- function(data,
       row_index <- row_index + 1
       fit_Y <- tryCatch(
         if (outcome_type == 'binary'){
-          stats::glm(Y_model, data = data_censored[data_censored$time == k,],
+          stats::glm(Y_model, data = data_censored[data_censored$time == k & data_censored$weights > 0,],
                      family = stats::binomial(), weights = weights)
         } else {
-          stats::glm(Y_model, data = data_censored[data_censored$time == k,],
+          stats::glm(Y_model, data = data_censored[data_censored$time == k & data_censored$weights > 0,],
                      family = stats::gaussian(), weights = weights)
         }
         ,

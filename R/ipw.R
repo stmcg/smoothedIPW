@@ -607,7 +607,7 @@ ipw_helper <- function(data,
 }
 
 trim_glm <- function(fit, trim_returned_models) {
-  if (trim_returned_models){
+  if (trim_returned_models & !is.null(fit)){
     fit <- summary(fit)$coefficients
   }
   return(fit)

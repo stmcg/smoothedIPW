@@ -12,6 +12,7 @@
 #' @param Y_model Model statement for the outcome variable
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncated the IP weights
 #' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output
+#' @param return_weights Logical scalar specifying whether to return the estimated inverse probability weights
 #' @param trim_returned_models Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed dataset is large. By default, this argument is set to \code{FALSE}.
 #'
 #' @return A object of class "ipw". This object is a list that includes the following components:
@@ -19,6 +20,10 @@
 #' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
 #'                   If the nonstacked pooled appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
 #'                   If the stacked pooled approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
+#' \item{data_weights}{(A list containing) the artificially censored data set with columns for the estimated weights. The column \code{"weights"} contains the (final) inverse probability weight, and the columns \code{"weights_A"} and \code{"weights_R"} contain the inverse probability weights for treatment and outcome measurement, respectively.
+#'                   If no deaths are present in the data, this object will be a data frame.
+#'                   If deaths are present in the data and either the nonpooled IPW method is applied or the pooled, non-stacked IPW method is applied, this object will be a list of length \code{length(outcome_times)} where each element corresponds to the artificially censored data set for each outcome time in \code{outcome_times}.
+#'                   If deaths are present in the data and the pooled, stacked IPW method is applied, this object will be a data frame with the stacked, artificially censored data.}
 #' \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 #'
 #' @details
@@ -79,6 +84,7 @@ ipw <- function(data,
                 Y_model,
                 truncation_percentile = NULL,
                 return_model_fits = TRUE,
+                return_weights = TRUE,
                 trim_returned_models = FALSE){
   # Check input
   if (missing(data)){
@@ -231,10 +237,12 @@ ipw <- function(data,
                       Y_model = Y_model,
                       truncation_percentile = truncation_percentile,
                       return_model_fits = return_model_fits,
+                      return_weights = return_weights,
                       trim_returned_models = trim_returned_models,
                       outcome_type = outcome_type)
     est <- res$est
     model_fits <- res$model_fits
+    data_weights <- res$data_weights
   } else {
     if (!pooled){
       # Nonpooled IPW with deaths
@@ -242,6 +250,11 @@ ipw <- function(data,
         model_fits <- vector(mode = "list", length = length(outcome_times))
       } else {
         model_fits <- NULL
+      }
+      if (return_weights){
+        data_weights <- vector(mode = "list", length = length(outcome_times))
+      } else {
+        data_weights <- NULL
       }
 
       i <- 1
@@ -259,6 +272,7 @@ ipw <- function(data,
                                Y_model = Y_model,
                                truncation_percentile = truncation_percentile,
                                return_model_fits = return_model_fits,
+                               return_weights = return_weights,
                                trim_returned_models = trim_returned_models,
                                outcome_type = outcome_type)
         if (i == 1){
@@ -269,6 +283,9 @@ ipw <- function(data,
         if (return_model_fits){
           model_fits[[i]] <- res_temp$model_fits
         }
+        if (return_weights){
+          data_weights[[i]] <- res_temp$data_weights
+        }
         i <- i + 1
       }
     } else {
@@ -278,6 +295,11 @@ ipw <- function(data,
           model_fits <- vector(mode = "list", length = length(outcome_times))
         } else {
           model_fits <- NULL
+        }
+        if (return_weights){
+          data_weights <- vector(mode = "list", length = length(outcome_times))
+        } else {
+          data_weights <- NULL
         }
 
         i <- 1
@@ -295,6 +317,7 @@ ipw <- function(data,
                                  Y_model = Y_model,
                                  truncation_percentile = truncation_percentile,
                                  return_model_fits = return_model_fits,
+                                 return_weights = return_weights,
                                  trim_returned_models = trim_returned_models,
                                  outcome_type = outcome_type)
           if (i == 1){
@@ -304,6 +327,9 @@ ipw <- function(data,
           }
           if (return_model_fits){
             model_fits[[i]] <- res_temp$model_fits
+          }
+          if (return_weights){
+            data_weights[[i]] <- res_temp$data_weights
           }
           i <- i + 1
         }
@@ -330,6 +356,7 @@ ipw <- function(data,
                                 Y_model = Y_model,
                                 truncation_percentile = truncation_percentile,
                                 return_model_fits = return_model_fits,
+                                return_weights = return_weights,
                                 only_compute_weights = TRUE,
                                 trim_returned_models = trim_returned_models,
                                 outcome_type = outcome_type)
@@ -342,6 +369,11 @@ ipw <- function(data,
           } else {
             dat_stacked <- rbind(dat_stacked, df_stack)
           }
+        }
+        if (return_weights){
+          data_weights <- dat_stacked[, c('id', 'time', 'Z', 'weights', 'weights_A', 'weights_R')]
+        } else {
+          data_weights <- NULL
         }
 
         # Step 2: Fit weighted outcome model
@@ -395,7 +427,8 @@ ipw <- function(data,
   args$outcome_times <- outcome_times
   args$data <- NULL
 
-  out <- list(est = est, args = args, model_fits = model_fits, outcome_type = outcome_type)
+  out <- list(est = est, args = args, model_fits = model_fits, data_weights = data_weights,
+              outcome_type = outcome_type)
   class(out) <- 'ipw'
   return(out)
 }
@@ -411,6 +444,7 @@ ipw_helper <- function(data,
                 Y_model,
                 truncation_percentile = NULL,
                 return_model_fits = TRUE,
+                return_weights = TRUE,
                 only_compute_weights = FALSE,
                 trim_returned_models,
                 outcome_type){
@@ -492,6 +526,10 @@ ipw_helper <- function(data,
   weights_A <- unname(unlist(tapply(1 / prob_A1, data_censored$id, FUN = cumprod)))
   weights_R <- ifelse(data_censored$R == 1, prob_R1_numerator / prob_R1_denominator, 0)
   data_censored$weights <- weights_A * weights_R
+  if (return_weights){
+    data_censored$weights_A <- weights_A
+    data_censored$weights_R <- weights_R
+  }
 
   # End function if only needing weights
   if (only_compute_weights){
@@ -601,7 +639,13 @@ ipw_helper <- function(data,
   } else {
     model_fits <- NULL
   }
-  out <- list(est = as.data.frame(est), model_fits = model_fits, df_stack = NULL)
+  if (return_weights){
+    data_weights <- data_censored[, c('id', 'time', 'Z', 'weights', 'weights_A', 'weights_R')]
+  } else {
+    data_weights <- NULL
+  }
+  out <- list(est = as.data.frame(est), model_fits = model_fits, df_stack = NULL,
+              data_weights = data_weights)
 
   return(out)
 }

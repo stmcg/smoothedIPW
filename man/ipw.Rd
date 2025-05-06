@@ -15,6 +15,7 @@ ipw(
   Y_model,
   truncation_percentile = NULL,
   return_model_fits = TRUE,
+  return_weights = TRUE,
   trim_returned_models = FALSE
 )
 }
@@ -39,6 +40,8 @@ ipw(
 
 \item{return_model_fits}{Logical scalar specifying whether to include the fitted models in the output}
 
+\item{return_weights}{Logical scalar specifying whether to return the estimated inverse probability weights}
+
 \item{trim_returned_models}{Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed dataset is large. By default, this argument is set to \code{FALSE}.}
 }
 \value{
@@ -47,6 +50,10 @@ A object of class "ipw". This object is a list that includes the following compo
 \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
 If the nonstacked pooled appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
 If the stacked pooled approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
+\item{data_weights}{(A list containing) the artificially censored data set with columns for the estimated weights. The column \code{"weights"} contains the (final) inverse probability weight, and the columns \code{"weights_A"} and \code{"weights_R"} contain the inverse probability weights for treatment and outcome measurement, respectively.
+If no deaths are present in the data, this object will be a data frame.
+If deaths are present in the data and either the nonpooled IPW method is applied or the pooled, non-stacked IPW method is applied, this object will be a list of length \code{length(outcome_times)} where each element corresponds to the artificially censored data set for each outcome time in \code{outcome_times}.
+If deaths are present in the data and the pooled, stacked IPW method is applied, this object will be a data frame with the stacked, artificially censored data.}
 \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 }
 \description{

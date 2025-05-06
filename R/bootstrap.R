@@ -8,6 +8,7 @@
 #' @param conf_level Numeric scalar specifying the confidence level for the confidence intervals. The default is \code{0.95}.
 #' @param reference_z_value Scalar specifying the value of \eqn{z} considered as the reference level when forming contrasts. See also argument \code{contrast_type}.
 #' @param contrast_type Character string specifying the type of contrast. The options are \code{"difference"} (for the difference of means/probabilities) and \code{"ratio"} (for the ratio of means/probabilities).
+#' @param show_progress Logical scalar specifying whether to show a progress bar.
 #'
 #' @return A list that includes the following components:
 #' \item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z}.}
@@ -37,7 +38,8 @@
 #' @export
 
 get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
-                   reference_z_value, contrast_type = 'difference'){
+                   reference_z_value, contrast_type = 'difference',
+                   show_progress = TRUE){
   # Check input
   if (missing(n_boot)){
     stop('The argument n_boot must be specified')
@@ -69,6 +71,13 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
   }
 
   # Step 1: Perform bootstrapping
+  if (show_progress) {
+    pb <- progress::progress_bar$new(
+      total = n_boot,
+      format = "  Bootstrapping [:bar] :percent | Elapsed: :elapsed | Time Remaining: :eta",
+      clear = FALSE
+    )
+  }
   res_boot_all <- array(NA, dim = c(n_boot, time_points, n_z))
   for (i in 1:n_boot){
     tryCatch({
@@ -93,6 +102,9 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
                      '. Bootstrap confidence intervals will be constructed excluding estimates from this bootstrap replicate.
                      The error message encountered is:\n', e))
     })
+    if (show_progress){
+      pb$tick()
+    }
   }
 
   # Step 2: Compute CI

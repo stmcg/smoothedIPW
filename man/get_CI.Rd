@@ -10,7 +10,8 @@ get_CI(
   n_boot,
   conf_level = 0.95,
   reference_z_value,
-  contrast_type = "difference"
+  contrast_type = "difference",
+  show_progress = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ get_CI(
 \item{reference_z_value}{Scalar specifying the value of \eqn{z} considered as the reference level when forming contrasts. See also argument \code{contrast_type}.}
 
 \item{contrast_type}{Character string specifying the type of contrast. The options are \code{"difference"} (for the difference of means/probabilities) and \code{"ratio"} (for the ratio of means/probabilities).}
+
+\item{show_progress}{Logical scalar specifying whether to show a progress bar.}
 }
 \value{
 A list that includes the following components:

@@ -58,6 +58,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
       data_boot <- resample_data(data = data)
       ipw_res_boot <- ipw(data = data_boot,
                           pooled = ipw_res$args$pooled,
+                          pooling_method = ipw_res$args$pooling_method,
                           outcome_times = outcome_times,
                           A_model = eval(ipw_res$args$A_model),
                           R_model_numerator = eval(ipw_res$args$R_model_numerator),

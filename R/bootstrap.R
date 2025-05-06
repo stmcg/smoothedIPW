@@ -54,20 +54,27 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
   # Step 1: Perform bootstrapping
   res_boot_all <- array(NA, dim = c(n_boot, time_points, n_z))
   for (i in 1:n_boot){
-    data_boot <- resample_data(data = data)
-    ipw_res_boot <- ipw(data = data_boot,
-                        pooled = ipw_res$args$pooled,
-                        outcome_times = outcome_times,
-                        A_model = eval(ipw_res$args$A_model),
-                        R_model_numerator = eval(ipw_res$args$R_model_numerator),
-                        R_model_denominator = eval(ipw_res$args$R_model_denominator),
-                        Y_model = eval(ipw_res$args$Y_model),
-                        truncation_percentile = eval(ipw_res$args$truncation_percentile),
-                        return_model_fits = FALSE,
-                        trim_returned_models = TRUE)
-    for (j in 1:n_z){
-      res_boot_all[i, , j] <- ipw_res_boot$est[, paste0('Z=', z_levels[j])]
-    }
+    tryCatch({
+      data_boot <- resample_data(data = data)
+      ipw_res_boot <- ipw(data = data_boot,
+                          pooled = ipw_res$args$pooled,
+                          outcome_times = outcome_times,
+                          A_model = eval(ipw_res$args$A_model),
+                          R_model_numerator = eval(ipw_res$args$R_model_numerator),
+                          R_model_denominator = eval(ipw_res$args$R_model_denominator),
+                          Y_model = eval(ipw_res$args$Y_model),
+                          truncation_percentile = eval(ipw_res$args$truncation_percentile),
+                          return_model_fits = FALSE,
+                          trim_returned_models = TRUE)
+      for (j in 1:n_z){
+        res_boot_all[i, , j] <- ipw_res_boot$est[, paste0('Z=', z_levels[j])]
+      }
+    },
+    error = function(e){
+      warning(paste0('An error occured in bootstrap replicate ', i,
+                     '. Bootstrap confidence intervals will be constructed excluding estimates from this bootstrap replicate.
+                     The error message encountered is:\n', e))
+    })
   }
 
   # Step 2: Compute CI
@@ -85,10 +92,12 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95){
 
     if (time_points > 1){
       for (i in 1:time_points){
-        res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2))
+        res_boot_single[i, c(3, 4)] <- stats::quantile(res_boot_z[, i], probs = c(alpha / 2, 1 - alpha / 2),
+                                                       na.rm = TRUE)
       }
     } else {
-      res_boot_single[1, c(3, 4)] <- stats::quantile(res_boot_z, probs = c(alpha / 2, 1 - alpha / 2))
+      res_boot_single[1, c(3, 4)] <- stats::quantile(res_boot_z, probs = c(alpha / 2, 1 - alpha / 2),
+                                                     na.rm = TRUE)
     }
     res_boot[[j]] <- res_boot_single
   }

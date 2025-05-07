@@ -562,9 +562,9 @@ ipw_helper <- function(data,
   if (pooled){
     fit_Y <- tryCatch(
       if (outcome_type == 'binary'){
-        stats::glm(formula = Y_model, data = data_censored, family = stats::binomial(), weights = weights)
+        stats::glm(formula = Y_model, data = data_censored[data_censored$weights > 0,], family = stats::binomial(), weights = weights)
       } else {
-        stats::glm(formula = Y_model, data = data_censored, family = stats::gaussian(), weights = weights)
+        stats::glm(formula = Y_model, data = data_censored[data_censored$weights > 0,], family = stats::gaussian(), weights = weights)
       }
       ,
       error = function(e) {

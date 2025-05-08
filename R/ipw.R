@@ -546,7 +546,7 @@ ipw_helper <- function(data,
   # Truncate IP weights, if applicable
   if (!is.null(truncation_percentile)){
     trunc_val <- stats::quantile(data_censored$weights, probs = truncation_percentile)
-    data_censored$weights <- pmin(data_censored$weights, truncation_percentile)
+    data_censored$weights <- pmin(data_censored$weights, trunc_val)
   }
 
   # Preparing data sets for estimating counterfactual outcome means

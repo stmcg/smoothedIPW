@@ -214,6 +214,10 @@ ipw <- function(data,
   # Set parameters
   if (missing(outcome_times)){
     outcome_times <- 0:max(data$time)
+  } else {
+    if (!all(outcome_times %in% 0:max(data$time))){
+      stop("All values in 'outcome_times' must be no greater than the maximum time interval in 'data' and no less than 0.")
+    }
   }
   any_deaths <- 'D' %in% colnames(data)
   if (is.factor(data$Y)){

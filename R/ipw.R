@@ -374,6 +374,11 @@ ipw <- function(data,
             dat_stacked <- rbind(dat_stacked, df_stack)
           }
         }
+        # Truncate IP weights, if applicable
+        if (!is.null(truncation_percentile)){
+          trunc_val <- stats::quantile(dat_stacked$weights, probs = truncation_percentile)
+          dat_stacked$weights <- pmin(dat_stacked$weights, trunc_val)
+        }
         if (return_weights){
           data_weights <- dat_stacked[, c('id', 'time', 'Z', 'weights', 'weights_A', 'weights_R')]
         } else {

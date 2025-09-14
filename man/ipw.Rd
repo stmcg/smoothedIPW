@@ -106,3 +106,6 @@ res$est
 }
 
 }
+\references{
+McGrath S, Kawahara T, Petimar J, Rifas-Shiman SL, Díaz I, Block JP, Young JG. Time-smoothed inverse probability weighted estimation of generalized time-varying treatment effects on repeated outcomes truncated by death. In preparation.
+}

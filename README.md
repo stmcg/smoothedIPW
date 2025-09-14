@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# pooledipw
+# smoothedIPW
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -166,8 +166,8 @@ data_null_processed[id == 2,]
 
 ###### Point estimation
 
-We will use the pooled IPW method, which is implemented in the `ipw`
-function. This method involves specifying the following models:
+We will use the time-smoothed IPW method, which is implemented in the
+`ipw` function. This method involves specifying the following models:
 
 - `A_model`: Treatment adherence model
 - `R_model_denominator`: Outcome measurement indicator model (used in
@@ -180,7 +180,7 @@ An example application of `ipw` is below:
 
 ``` r
 res_est <- ipw(data = data_null_processed,
-               pooled = TRUE,
+               time_smoothed = TRUE,
                outcome_times = c(6, 12, 18, 24),
                A_model = A ~ L + Z,
                R_model_denominator = R ~ L + A + Z,

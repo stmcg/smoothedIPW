@@ -29,6 +29,9 @@
 #' @details
 #' Additional description of the method
 #'
+#' @references
+#' McGrath S, Kawahara T, Petimar J, Rifas-Shiman SL, Díaz I, Block JP, Young JG. Time-smoothed inverse probability weighted estimation of generalized time-varying treatment effects on repeated outcomes truncated by death. In preparation.
+#'
 #' @examples
 #'
 #' ## Time-smoothed IPW without deaths (continuous outcome)

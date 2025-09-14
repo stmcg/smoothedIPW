@@ -24,7 +24,7 @@
 #' data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
 #'                                  baseline_vars = 'L')
 #' res_est <- ipw(data = data_null_processed,
-#'                pooled = TRUE,
+#'                time_smoothed = TRUE,
 #'                outcome_times = c(6, 12, 18, 24),
 #'                A_model = A ~ L + Z,
 #'                R_model_numerator = R ~ L_baseline + Z,
@@ -83,8 +83,8 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
     tryCatch({
       data_boot <- resample_data(data = data)
       ipw_res_boot <- ipw(data = data_boot,
-                          pooled = ipw_res$args$pooled,
-                          pooling_method = ipw_res$args$pooling_method,
+                          time_smoothed = ipw_res$args$time_smoothed,
+                          smoothing_method = ipw_res$args$smoothing_method,
                           outcome_times = outcome_times,
                           A_model = eval(ipw_res$args$A_model),
                           R_model_numerator = eval(ipw_res$args$R_model_numerator),

@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(pooledipw)
+library(smoothedIPW)
 
-test_check("pooledipw")
+test_check("smoothedIPW")

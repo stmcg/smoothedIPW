@@ -1,10 +1,10 @@
-#' Pooled inverse probability weighting
+#' Time-smoothed inverse probability weighting
 #'
-#' This function applies the pooled inverse probability weighted (IPW) approach described by McGrath et al. (in preparation).
+#' This function applies the time-smoothed inverse probability weighted (IPW) approach described by McGrath et al. (2025).
 #'
 #' @param data Data table (or data frame) containing the observed data
-#' @param pooled Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.
-#' @param pooling_method Character string specify the pooled IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
+#' @param time_smoothed Logical scalar specifying whether the time-smoothed or non-smoothed IPW method is applied. The default is \code{TRUE}, i.e., the time-smoothed IPW method.
+#' @param smoothing_method Character string specify the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
 #' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability. The default is all time points in \code{data}.
 #' @param A_model Model statement for the treatment variable
 #' @param R_model_numerator Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
@@ -18,12 +18,12 @@
 #' @return A object of class "ipw". This object is a list that includes the following components:
 #' \item{est}{A data frame containing the counterfactual mean/probability estimates for each medication at each time interval.}
 #' \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
-#'                   If the nonstacked pooled appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
-#'                   If the stacked pooled approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
+#'                   If the nonstacked time-smoothed appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
+#'                   If the stacked time-smoothed approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
 #' \item{data_weights}{(A list containing) the artificially censored data set with columns for the estimated weights. The column \code{"weights"} contains the (final) inverse probability weight, and the columns \code{"weights_A"} and \code{"weights_R"} contain the inverse probability weights for treatment and outcome measurement, respectively.
 #'                   If no deaths are present in the data, this object will be a data frame.
-#'                   If deaths are present in the data and either the nonpooled IPW method is applied or the pooled, non-stacked IPW method is applied, this object will be a list of length \code{length(outcome_times)} where each element corresponds to the artificially censored data set for each outcome time in \code{outcome_times}.
-#'                   If deaths are present in the data and the pooled, stacked IPW method is applied, this object will be a data frame with the stacked, artificially censored data.}
+#'                   If deaths are present in the data and either the non-smoothed IPW method is applied or the time-smoothed non-stacked IPW method is applied, this object will be a list of length \code{length(outcome_times)} where each element corresponds to the artificially censored data set for each outcome time in \code{outcome_times}.
+#'                   If deaths are present in the data and the time-smoothed stacked IPW method is applied, this object will be a data frame with the stacked, artificially censored data.}
 #' \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 #'
 #' @details
@@ -31,11 +31,11 @@
 #'
 #' @examples
 #'
-#' ## Pooled IPW without deaths (continuous outcome)
+#' ## Time-smoothed IPW without deaths (continuous outcome)
 #' data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
 #'                                  baseline_vars = 'L')
 #' res <- ipw(data = data_null_processed,
-#'            pooled = TRUE,
+#'            time_smoothed = TRUE,
 #'            outcome_times = c(6, 12, 18, 24),
 #'            A_model = A ~ L + Z,
 #'            R_model_numerator = R ~ L_baseline + Z,
@@ -43,12 +43,12 @@
 #'            Y_model = Y ~ L_baseline * (time + Z))
 #' res$est
 #'
-#' ## Pooled IPW with deaths, nonstacked pooling method (continuous outcome)
+#' ## Time-smoothed IPW with deaths, nonstacked smoothing method (continuous outcome)
 #' data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_length = 2,
 #'                                         baseline_vars = 'L')
 #' res <- ipw(data = data_null_deaths_processed,
-#'            pooled = TRUE,
-#'            pooling_method = 'nonstacked',
+#'            time_smoothed = TRUE,
+#'            smoothing_method = 'nonstacked',
 #'            outcome_times = c(6, 12, 18, 24),
 #'            A_model = A ~ L + Z,
 #'            R_model_numerator = R ~ L_baseline + Z,
@@ -56,14 +56,14 @@
 #'            Y_model = Y ~ L_baseline * (time + Z))
 #' res$est
 #'
-#' ## Pooled IPW with deaths, stacked pooling method (binary outcome)
+#' ## Time-smoothed IPW with deaths, stacked smoothing method (binary outcome)
 #' \donttest{
 #' data_null_deaths_binary_processed <- prep_data(data = data_null_deaths_binary,
 #'                                                grace_period_length = 2,
 #'                                                baseline_vars = 'L')
 #' res <- ipw(data = data_null_deaths_binary_processed,
-#'            pooled = TRUE,
-#'            pooling_method = 'stacked',
+#'            time_smoothed = TRUE,
+#'            smoothing_method = 'stacked',
 #'            outcome_times = c(6, 12, 18, 24),
 #'            A_model = A ~ L + Z,
 #'            R_model_numerator = R ~ L_baseline + Z,
@@ -75,8 +75,8 @@
 #'
 #' @export
 ipw <- function(data,
-                pooled = TRUE,
-                pooling_method = 'nonstacked',
+                time_smoothed = TRUE,
+                smoothing_method = 'nonstacked',
                 outcome_times,
                 A_model,
                 R_model_numerator,
@@ -169,11 +169,11 @@ ipw <- function(data,
   if (!"Z" %in% rhs) {
     warning("Y_model does not include 'Z' as a predictor.")
   }
-  if (!"time" %in% rhs & pooled) {
-    warning("Y_model does not include 'time' as a predictor although the pooled IPW method is selected.")
+  if (!"time" %in% rhs & time_smoothed) {
+    warning("Y_model does not include 'time' as a predictor although the time-smoothed IPW method is selected.")
   }
-  if ("time" %in% rhs & !pooled) {
-    warning("Y_model should not include 'time' as a predictor since the non-pooled IPW method is selected.")
+  if ("time" %in% rhs & !time_smoothed) {
+    warning("Y_model should not include 'time' as a predictor since the non-smoothed IPW method is selected.")
   }
   if ("A" %in% rhs) {
     stop("Y_model should not include 'A' (or any other post-baseline covariate) as a predictor.")
@@ -231,9 +231,9 @@ ipw <- function(data,
   }
 
   if (!any_deaths){
-    # Pooled/nonpooled IPW without deaths
+    # Time-smoothed/non-smoothed IPW without deaths
     res <- ipw_helper(data = data,
-                      pooled = pooled,
+                      time_smoothed = time_smoothed,
                       outcome_times = outcome_times,
                       A_model = A_model,
                       R_model_numerator = R_model_numerator,
@@ -248,8 +248,8 @@ ipw <- function(data,
     model_fits <- res$model_fits
     data_weights <- res$data_weights
   } else {
-    if (!pooled){
-      # Nonpooled IPW with deaths
+    if (!time_smoothed){
+      # Non-smoothed IPW with deaths
       if (return_model_fits){
         model_fits <- vector(mode = "list", length = length(outcome_times))
       } else {
@@ -268,7 +268,7 @@ ipw <- function(data,
         newdata <- newdata[newdata$id %in% ids_to_keep, ]
 
         res_temp <- ipw_helper(data = newdata,
-                               pooled = FALSE,
+                               time_smoothed = FALSE,
                                outcome_times = outcome_time,
                                A_model = A_model,
                                R_model_numerator = R_model_numerator,
@@ -293,8 +293,8 @@ ipw <- function(data,
         i <- i + 1
       }
     } else {
-      # IPW with deaths, nonstacked pooling method
-      if (pooling_method == 'nonstacked'){
+      # IPW with deaths, nonstacked time-smoothing method
+      if (smoothing_method == 'nonstacked'){
         if (return_model_fits){
           model_fits <- vector(mode = "list", length = length(outcome_times))
         } else {
@@ -313,7 +313,7 @@ ipw <- function(data,
           newdata <- newdata[newdata$id %in% ids_to_keep, ]
 
           res_temp <- ipw_helper(data = newdata,
-                                 pooled = TRUE,
+                                 time_smoothed = TRUE,
                                  outcome_times = outcome_time,
                                  A_model = A_model,
                                  R_model_numerator = R_model_numerator,
@@ -337,8 +337,8 @@ ipw <- function(data,
           }
           i <- i + 1
         }
-      } else if (pooling_method == 'stacked'){
-        # IPW with deaths, stacked pooling method
+      } else if (smoothing_method == 'stacked'){
+        # IPW with deaths, stacked time-smoothing method
         if (return_model_fits){
           model_fits <- vector(mode = "list", length = max(data$time) + 2)
         } else {
@@ -352,7 +352,7 @@ ipw <- function(data,
           newdata <- newdata[newdata$id %in% ids_to_keep, ]
 
           res_temp <- ipw_helper(data = newdata,
-                                pooled = TRUE,
+                                time_smoothed = TRUE,
                                 outcome_times = j,
                                 A_model = A_model,
                                 R_model_numerator = R_model_numerator,
@@ -445,7 +445,7 @@ ipw <- function(data,
 
 
 ipw_helper <- function(data,
-                pooled = TRUE,
+                time_smoothed = TRUE,
                 outcome_times,
                 A_model,
                 R_model_numerator,
@@ -568,7 +568,7 @@ ipw_helper <- function(data,
 
   # Estimating counterfactual outcome means
   row_index <- 0
-  if (pooled){
+  if (time_smoothed){
     fit_Y <- tryCatch(
       if (outcome_type == 'binary'){
         stats::glm(formula = Y_model, data = data_censored[data_censored$weights > 0,], family = stats::binomial(), weights = weights)
@@ -634,7 +634,7 @@ ipw_helper <- function(data,
   }
 
   if (return_model_fits){
-    if (pooled){
+    if (time_smoothed){
       model_fits <- list(fit_A = fit_A,
                          fit_R_denominator = fit_R_denominator,
                          fit_R_numerator = fit_R_numerator,

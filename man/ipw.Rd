@@ -2,12 +2,12 @@
 % Please edit documentation in R/ipw.R
 \name{ipw}
 \alias{ipw}
-\title{Pooled inverse probability weighting}
+\title{Time-smoothed inverse probability weighting}
 \usage{
 ipw(
   data,
-  pooled = TRUE,
-  pooling_method = "nonstacked",
+  time_smoothed = TRUE,
+  smoothing_method = "nonstacked",
   outcome_times,
   A_model,
   R_model_numerator,
@@ -22,9 +22,9 @@ ipw(
 \arguments{
 \item{data}{Data table (or data frame) containing the observed data}
 
-\item{pooled}{Logical scalar specifying whether the pooled or nonpooled IPW method is applied. The default is \code{TRUE}, i.e., the pooled IPW method.}
+\item{time_smoothed}{Logical scalar specifying whether the time-smoothed or non-smoothed IPW method is applied. The default is \code{TRUE}, i.e., the time-smoothed IPW method.}
 
-\item{pooling_method}{Character string specify the pooled IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.}
+\item{smoothing_method}{Character string specify the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.}
 
 \item{outcome_times}{Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability. The default is all time points in \code{data}.}
 
@@ -48,27 +48,27 @@ ipw(
 A object of class "ipw". This object is a list that includes the following components:
 \item{est}{A data frame containing the counterfactual mean/probability estimates for each medication at each time interval.}
 \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
-If the nonstacked pooled appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
-If the stacked pooled approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
+If the nonstacked time-smoothed appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
+If the stacked time-smoothed approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
 \item{data_weights}{(A list containing) the artificially censored data set with columns for the estimated weights. The column \code{"weights"} contains the (final) inverse probability weight, and the columns \code{"weights_A"} and \code{"weights_R"} contain the inverse probability weights for treatment and outcome measurement, respectively.
 If no deaths are present in the data, this object will be a data frame.
-If deaths are present in the data and either the nonpooled IPW method is applied or the pooled, non-stacked IPW method is applied, this object will be a list of length \code{length(outcome_times)} where each element corresponds to the artificially censored data set for each outcome time in \code{outcome_times}.
-If deaths are present in the data and the pooled, stacked IPW method is applied, this object will be a data frame with the stacked, artificially censored data.}
+If deaths are present in the data and either the non-smoothed IPW method is applied or the time-smoothed non-stacked IPW method is applied, this object will be a list of length \code{length(outcome_times)} where each element corresponds to the artificially censored data set for each outcome time in \code{outcome_times}.
+If deaths are present in the data and the time-smoothed stacked IPW method is applied, this object will be a data frame with the stacked, artificially censored data.}
 \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 }
 \description{
-This function applies the pooled inverse probability weighted (IPW) approach described by McGrath et al. (in preparation).
+This function applies the time-smoothed inverse probability weighted (IPW) approach described by McGrath et al. (2025).
 }
 \details{
 Additional description of the method
 }
 \examples{
 
-## Pooled IPW without deaths (continuous outcome)
+## Time-smoothed IPW without deaths (continuous outcome)
 data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
 res <- ipw(data = data_null_processed,
-           pooled = TRUE,
+           time_smoothed = TRUE,
            outcome_times = c(6, 12, 18, 24),
            A_model = A ~ L + Z,
            R_model_numerator = R ~ L_baseline + Z,
@@ -76,12 +76,12 @@ res <- ipw(data = data_null_processed,
            Y_model = Y ~ L_baseline * (time + Z))
 res$est
 
-## Pooled IPW with deaths, nonstacked pooling method (continuous outcome)
+## Time-smoothed IPW with deaths, nonstacked smoothing method (continuous outcome)
 data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_length = 2,
                                         baseline_vars = 'L')
 res <- ipw(data = data_null_deaths_processed,
-           pooled = TRUE,
-           pooling_method = 'nonstacked',
+           time_smoothed = TRUE,
+           smoothing_method = 'nonstacked',
            outcome_times = c(6, 12, 18, 24),
            A_model = A ~ L + Z,
            R_model_numerator = R ~ L_baseline + Z,
@@ -89,14 +89,14 @@ res <- ipw(data = data_null_deaths_processed,
            Y_model = Y ~ L_baseline * (time + Z))
 res$est
 
-## Pooled IPW with deaths, stacked pooling method (binary outcome)
+## Time-smoothed IPW with deaths, stacked smoothing method (binary outcome)
 \donttest{
 data_null_deaths_binary_processed <- prep_data(data = data_null_deaths_binary,
                                                grace_period_length = 2,
                                                baseline_vars = 'L')
 res <- ipw(data = data_null_deaths_binary_processed,
-           pooled = TRUE,
-           pooling_method = 'stacked',
+           time_smoothed = TRUE,
+           smoothing_method = 'stacked',
            outcome_times = c(6, 12, 18, 24),
            A_model = A ~ L + Z,
            R_model_numerator = R ~ L_baseline + Z,

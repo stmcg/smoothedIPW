@@ -6,23 +6,23 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The `pooledipw` package implements inverse probability weighted (IPW)
+The `smoothedIPW` package implements inverse probability weighted (IPW)
 methods to estimate effects of generalized time-varying treatment
-strategies on sparsely measured continuous outcomes in electronic health
-records (EHR) data. Specifically, this package implements pooled and
-nonpooled IPW methods as described in McGrath et al. (in preparation).
-In settings with truncation by death, two different pooled IPW methods
-(i.e., the stacked and nonstacked methods) are available, which rely on
-different assumptions to smooth over time.
+strategies on repeatedly measured outcomes. Specifically, this package
+implements time-smoothed and non-smoothed IPW methods as described in
+McGrath et al. (2025). In settings with truncation by death, two
+different time-smoothed IPW methods (i.e., the stacked and nonstacked
+methods) are available, which rely on different assumptions to smooth
+over time.
 
 ## Installation
 
-You can install the development version of `pooledipw` from
+You can install the development version of `smoothedIPW` from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("stmcg/pooledipw")
+devtools::install_github("stmcg/smoothedIPW")
 ```
 
 ## Example
@@ -30,7 +30,7 @@ devtools::install_github("stmcg/pooledipw")
 We first load the package.
 
 ``` r
-library(pooledipw)
+library(smoothedIPW)
 ```
 
 We will estimate the effect of treatment strategies with the following

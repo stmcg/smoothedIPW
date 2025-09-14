@@ -1,11 +1,13 @@
-Package: pooledipw
-Title: Inverse Probability Weighting for Sparsely Measured Outcomes
+Package: smoothedIPW
+Title: Time-Smoothed Inverse Probability Weighting for Repeatedly Measured Outcomes
 Version: 0.1.0
 Authors@R: 
     c(person("Sean", "McGrath", 
              role = c("aut", "cre"),
              email = "sean.mcgrath514@gmail.com", 
-             comment = c(ORCID = "0000-0002-7281-3516")), 
+             comment = c(ORCID = "0000-0002-7281-3516")),
+      person("Takuya", "Kawahara", 
+             role = c("aut")),
       person("Jessica", "Young", 
              role = c("aut"), 
              email = "jyoung@hsph.harvard.edu", 
@@ -20,7 +22,7 @@ Imports: data.table,
 Depends: 
     R (>= 2.10)
 LazyData: true
-BugReports: https://github.com/stmcg/pooledipw
+BugReports: https://github.com/stmcg/smoothedIPW
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

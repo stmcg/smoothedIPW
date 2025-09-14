@@ -12,7 +12,11 @@ Authors@R:
              role = c("aut"), 
              email = "jyoung@hsph.harvard.edu", 
              comment = c(ORCID = "0000-0002-2758-6932")))
-Description: What the package does (one paragraph).
+Description: Implements several inverse probability weighted estimators of 
+    generalized time-varying treatment effects when outcomes are repeatedly
+    measured and may be truncated by death. Specifically, this package 
+    implements the time-smoothed and non-smoothed IPW methods described in 
+    McGrath et al. (2025). 
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

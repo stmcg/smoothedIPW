@@ -1,6 +1,6 @@
 #' Time-smoothed inverse probability weighting
 #'
-#' This function applies the time-smoothed inverse probability weighted (IPW) approach described by McGrath et al. (2025).
+#' This function applies the time-smoothed inverse probability weighted (IPW) approach described by McGrath et al. (2025) to estimate effects of generalized time-varying treatment strategies on the mean of an outcome at one or more selected follow-up times of interest.
 #'
 #' @param data Data table (or data frame) containing the observed data
 #' @param time_smoothed Logical scalar specifying whether the time-smoothed or non-smoothed IPW method is applied. The default is \code{TRUE}, i.e., the time-smoothed IPW method.
@@ -27,7 +27,13 @@
 #' \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 #'
 #' @details
-#' Additional description of the method
+#' Users can estimate effects of treatment strategies with the following components:
+#' \itemize{
+#'   \item Initiate treatment \eqn{z} at baseline
+#'   \item Follow a user-specified time-varying adherence protocol for treatment \eqn{z}
+#'   \item Ensure an outcome measurement at the follow-up time of interest.
+#' }
+#' The time-varying adherence protocol is specified by indicating in \code{data} when an individual deviates from their adherence protocol. The function \code{\link{prep_data}} facilitates this step.
 #'
 #' @references
 #' McGrath S, Kawahara T, Petimar J, Rifas-Shiman SL, Díaz I, Block JP, Young JG. (2025). Time-smoothed inverse probability weighted estimation of effects of generalized time-varying treatment strategies on repeated outcomes truncated by death. arXiv e-prints arXiv:2509.13971.

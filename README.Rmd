@@ -18,7 +18,15 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The `smoothedIPW` package implements inverse probability weighted (IPW) methods to estimate effects of generalized time-varying treatment strategies on repeatedly measured outcomes. Specifically, this package implements time-smoothed IPW methods as described in [McGrath et al. (2025)](https://doi.org/10.48550/arXiv.2509.13971). In settings with truncation by death, two different time-smoothed IPW methods (i.e., the stacked and nonstacked methods) are available, which rely on different assumptions to smooth over time. 
+The `smoothedIPW` package implements methods to estimate effects of generalized time-varying treatment strategies on the mean of an outcome at one or more selected follow-up times of interest. The package allows for treatment strategies with the following components:
+
+- Initiate treatment $z$ at baseline
+- Follow a user-specified time-varying adherence protocol for treatment $z$
+- Ensure an outcome measurement at the follow-up time of interest.
+
+The package considers the setting where outcomes may be repeatedly, non-monotonically, informatively, and sparsely measured in the data source. The package also supports settings where outcomes are truncated by death, i.e. some individuals die during follow-up which renders the outcome of interest undefined at the follow-up time of interest.
+
+Specifically, this package implements the time-smoothed inverse probability weighted (IPW) methods described in [McGrath et al. (2025)](https://doi.org/10.48550/arXiv.2509.13971). Time-smoothing refers to using outcome measurements at intermediate time-points in order to gain precision. In settings with truncation by death, two different type of approaches for time-smoothing are available (i.e., the stacked and nonstacked methods), which rely on different model assumptions. Further details are given in [McGrath et al. (2025)](https://doi.org/10.48550/arXiv.2509.13971).
 
 ## Installation
 
@@ -37,7 +45,6 @@ library(smoothedIPW)
 ```
 
 We will estimate the effect of treatment strategies with the following three components:
-
 * Initiate medication $z$ ($z \in \{0, 1\}$) at baseline
 * Adhere to medication $z$ throughout the follow up, allowing for a grace period of 2 months
 * Ensure an outcome measurement at the follow-up time of interest

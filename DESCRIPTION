@@ -12,11 +12,15 @@ Authors@R:
              role = c("aut"), 
              email = "jyoung@hsph.harvard.edu", 
              comment = c(ORCID = "0000-0002-2758-6932")))
-Description: Implements several inverse probability weighted estimators of 
-    generalized time-varying treatment effects when outcomes are repeatedly
-    measured and may be truncated by death. Specifically, this package 
-    implements the time-smoothed and non-smoothed IPW methods described in 
-    McGrath et al. (2025) <doi:10.48550/arXiv.2509.13971>. 
+Description: Implements several methods to estimate effects of generalized 
+    time-varying treatment strategies on the mean of an outcome at one or more 
+    selected follow-up times of interest. Specifically, the package implements 
+    the time-smoothed inverse probability weighted estimators described in  
+    McGrath et al. (2025) <doi:10.48550/arXiv.2509.13971>. Outcomes may be repeatedly, 
+    non-monotonically, informatively, and sparsely measured in the data source. 
+    The package also supports settings where outcomes are truncated by death, 
+    i.e. some individuals die during follow-up which renders the outcome of 
+    interest undefined at the follow-up time of interest. 
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

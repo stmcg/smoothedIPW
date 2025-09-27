@@ -9,11 +9,11 @@
 The `smoothedIPW` package implements inverse probability weighted (IPW)
 methods to estimate effects of generalized time-varying treatment
 strategies on repeatedly measured outcomes. Specifically, this package
-implements time-smoothed and non-smoothed IPW methods as described in
-McGrath et al. (2025). In settings with truncation by death, two
-different time-smoothed IPW methods (i.e., the stacked and nonstacked
-methods) are available, which rely on different assumptions to smooth
-over time.
+implements time-smoothed IPW methods as described in [McGrath et
+al. (2025)](https://doi.org/10.48550/arXiv.2509.13971). In settings with
+truncation by death, two different time-smoothed IPW methods (i.e., the
+stacked and nonstacked methods) are available, which rely on different
+assumptions to smooth over time.
 
 ## Installation
 

@@ -10,7 +10,7 @@ ipw(
   smoothing_method = "nonstacked",
   outcome_times,
   A_model,
-  R_model_numerator,
+  R_model_numerator = NULL,
   R_model_denominator,
   Y_model,
   truncation_percentile = NULL,

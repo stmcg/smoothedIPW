@@ -88,7 +88,7 @@ ipw <- function(data,
                 smoothing_method = 'nonstacked',
                 outcome_times,
                 A_model,
-                R_model_numerator,
+                R_model_numerator = NULL,
                 R_model_denominator,
                 Y_model,
                 truncation_percentile = NULL,
@@ -136,7 +136,7 @@ ipw <- function(data,
   }
 
   # Check R_model_numerator (if applicable)
-  if (!missing(R_model_numerator)){
+  if (!is.null(R_model_numerator)){
     if (!inherits(R_model_numerator, "formula")) {
       stop("R_model_numerator must be a formula, e.g., R ~ L_baseline + Z")
     }
@@ -440,13 +440,16 @@ ipw <- function(data,
     }
   }
 
-  # Get all arguments supplied to the function, except the input data set
-  args <- as.list(match.call())[-1]
-  args$outcome_times <- outcome_times
-  args$data <- NULL
-
-  out <- list(est = est, args = args, model_fits = model_fits, data_weights = data_weights,
-              outcome_type = outcome_type)
+  args <- list(time_smoothed = time_smoothed,
+               smoothing_method = smoothing_method,
+               outcome_times = outcome_times,
+               truncation_percentile = truncation_percentile,
+               A_model = A_model,
+               R_model_numerator = R_model_numerator,
+               R_model_denominator = R_model_denominator,
+               Y_model = Y_model)
+  out <- list(est = est, model_fits = model_fits, data_weights = data_weights,
+              outcome_type = outcome_type, args = args)
   class(out) <- 'ipw'
   return(out)
 }
@@ -515,7 +518,7 @@ ipw_helper <- function(data,
   }
 
   # Measurement model (numerator) and weights
-  if (!missing(R_model_numerator)){
+  if (!is.null(R_model_numerator)){
     fit_R_numerator <- tryCatch(
       stats::glm(R_model_numerator, family = 'binomial', data = data),
       error = function(e) {
@@ -529,7 +532,7 @@ ipw_helper <- function(data,
   } else {
     fit_R_numerator <- NULL
   }
-  if (!missing(R_model_numerator)){
+  if (!is.null(R_model_numerator)){
     prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = data_censored)
     if (!return_model_fits){
       fit_R_numerator <- NULL

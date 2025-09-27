@@ -52,7 +52,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
     data <- data.table::as.data.table(data)
   }
 
-  outcome_times <- eval(ipw_res$args$outcome_times)
+  outcome_times <- ipw_res$args$outcome_times
   time_points <- length(outcome_times)
   z_levels <- sort(unique(data$Z))
   n_z <- length(z_levels)
@@ -86,11 +86,11 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
                           time_smoothed = ipw_res$args$time_smoothed,
                           smoothing_method = ipw_res$args$smoothing_method,
                           outcome_times = outcome_times,
-                          A_model = eval(ipw_res$args$A_model),
-                          R_model_numerator = eval(ipw_res$args$R_model_numerator),
-                          R_model_denominator = eval(ipw_res$args$R_model_denominator),
-                          Y_model = eval(ipw_res$args$Y_model),
-                          truncation_percentile = eval(ipw_res$args$truncation_percentile),
+                          A_model = ipw_res$args$A_model,
+                          R_model_numerator = ipw_res$args$R_model_numerator,
+                          R_model_denominator = ipw_res$args$R_model_denominator,
+                          Y_model = ipw_res$args$Y_model,
+                          truncation_percentile = ipw_res$args$truncation_percentile,
                           return_model_fits = FALSE,
                           return_weights = FALSE,
                           trim_returned_models = TRUE)

@@ -1,19 +1,19 @@
 #' Time-smoothed inverse probability weighting
 #'
-#' This function applies the time-smoothed inverse probability weighted (IPW) approach described by McGrath et al. (2025) to estimate effects of generalized time-varying treatment strategies on the mean of an outcome at one or more selected follow-up times of interest.
+#' This function applies the time-smoothed inverse probability weighted (IPW) approach described by McGrath et al. (2025) to estimate effects of generalized time-varying treatment strategies on the mean of an outcome at one or more selected follow-up times of interest. Binary and continuous outcomes are supported.
 #'
-#' @param data Data table (or data frame) containing the observed data
+#' @param data Data table (or data frame) containing the observed data. See "Details".
 #' @param time_smoothed Logical scalar specifying whether the time-smoothed or non-smoothed IPW method is applied. The default is \code{TRUE}, i.e., the time-smoothed IPW method.
 #' @param smoothing_method Character string specify the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
 #' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability. The default is all time points in \code{data}.
 #' @param A_model Model statement for the treatment variable
-#' @param R_model_numerator Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
+#' @param R_model_numerator (Optional) Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
 #' @param R_model_denominator Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights
 #' @param Y_model Model statement for the outcome variable
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncated the IP weights
 #' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output
 #' @param return_weights Logical scalar specifying whether to return the estimated inverse probability weights
-#' @param trim_returned_models Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed dataset is large. By default, this argument is set to \code{FALSE}.
+#' @param trim_returned_models Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed data set is large. By default, this argument is set to \code{FALSE}.
 #'
 #' @return A object of class "ipw". This object is a list that includes the following components:
 #' \item{est}{A data frame containing the counterfactual mean/probability estimates for each medication at each time interval.}
@@ -27,13 +27,46 @@
 #' \item{args}{A list containing the arguments supplied to \code{\link{ipw}}, except the observed data set.}
 #'
 #' @details
+#'
+#' \strong{Treatment strategies}
+#'
 #' Users can estimate effects of treatment strategies with the following components:
 #' \itemize{
 #'   \item Initiate treatment \eqn{z} at baseline
 #'   \item Follow a user-specified time-varying adherence protocol for treatment \eqn{z}
 #'   \item Ensure an outcome measurement at the follow-up time of interest.
 #' }
-#' The time-varying adherence protocol is specified by indicating in \code{data} when an individual deviates from their adherence protocol. The function \code{\link{prep_data}} facilitates this step.
+#' The time-varying adherence protocol is specified by indicating in \code{data} when an individual deviates from their adherence protocol. The function \code{\link{prep_data}} facilitates this step. See also "Formating \code{data}".
+#'
+#' \strong{Formating \code{data}}
+#'
+#' The input data set \code{data} must be a data table (or data frame) in a "long" format, where each row represents one time interval for one individual. The data frame should contain the following columns:
+#' \itemize{
+#'   \item \code{id}: A unique identifier for each participant.
+#'   \item \code{time}: The follow-up time index (e.g., 0, 1, 2, ...).
+#'   \item Covariate columns: One or more columns for baseline and time-varying covariates.
+#'   \item \code{Z}: The treatment initiated at baseline.
+#'   \item \code{A}: An indicator for adherence to the treatment protocol at each time point.
+#'   \item \code{R}: An indicator of whether the outcome was measured at that time point (1 for measured, 0 for not measured/censored).
+#'   \item \code{Y}: The outcome variable, which can be binary or continuous.
+#' }
+#' To specify the intervention, the data set should additionally have the following columns:
+#' \itemize{
+#'   \item \code{C_artificial}: An indicator specifying when an individual should be artificially censored from the data due to violating the adherence protocol.
+#'   \item \code{A_model_eligible}: An indicator specifying which records should be used for fitting the treatment adherence model.
+#' }
+#' The \code{\link{prep_data}} function facilitates adding these columns to the data set. Users may optionally include the following column for fitting the outcome measurement model:
+#' \itemize{
+#'   \item \code{R_model_denominator_eligible}: An indicator specifying which records should be used for fitting the outcome measurement model \code{R_model_denominator_eligible}.
+#' }
+#' Otherwise, the \code{R_model_denominator_eligible} is fit on all records on the artificially censored data set.
+#'
+#' \strong{Specifying the models}
+#'
+#' Users must specify model statements for the treatment (\code{A_model}), outcome measurement (\code{R_model_numerator} and \code{R_model_denominator}), and outcome variable (\code{Y_model}). The package uses pooled-over-time generalized linear models that are fit over the relevant time points (see "Formating \code{data}"), where logistic regression is used for binary variables and linear regression is used for continuous variables.
+#'
+#' For stabilized weights, the outcome measurement model \code{R_model_numerator} should \strong{only} include baseline covariates, treatment initiated \code{Z}, and \code{time} as predictors. It must not include time-varying covariates as predictors. The outcome model \code{Y_model} should also only depend on baseline covariates, treatment initiated \code{Z}, and \code{time} (if using time smoothing).
+#'
 #'
 #' @references
 #' McGrath S, Kawahara T, Petimar J, Rifas-Shiman SL, Díaz I, Block JP, Young JG. (2025). Time-smoothed inverse probability weighted estimation of effects of generalized time-varying treatment strategies on repeated outcomes truncated by death. arXiv e-prints arXiv:2509.13971.
@@ -235,7 +268,7 @@ ipw <- function(data,
     outcome_type <- 'continuous'
     if (length(unique(data$Y)) == 2){
       warning("The outcome is treated as a continuous variable, although only two levels where detected.
-              To treat the outcome as a binary variable, the column 'Y' in the observed dataset should be a factor variable.")
+              To treat the outcome as a binary variable, the column 'Y' in the observed data set should be a factor variable.")
     }
   }
 

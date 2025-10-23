@@ -13,6 +13,22 @@ z1_est_smoothed_expected <- c(-0.008793305, -0.013221677, -0.017650050, -0.02207
                             -0.079647263, -0.084075635, -0.088504008, -0.092932380, -0.097360752, -0.101789125, -0.106217497, -0.110645870,
                             -0.115074242)
 
+z0_est_smoothed_exclude_expected <- c(0.003639603,  0.001225031, -0.001189541, -0.003604113, -0.006018685, -0.008433257,
+                                       -0.010847829, -0.013262401, -0.015676974, -0.018091546, -0.020506118, -0.022920690,
+                                       -0.025335262, -0.027749834, -0.030164406, -0.032578978, -0.034993550, -0.037408122,
+                                       -0.039822694, -0.042237266, -0.044651838, -0.047066411, -0.049480983, -0.051895555)
+
+z1_est_smoothed_exclude_expected <- c(-0.04583356, -0.04824813, -0.05066270, -0.05307727, -0.05549184, -0.05790642, -0.06032099,
+                                      -0.06273556, -0.06515013, -0.06756470, -0.06997928, -0.07239385, -0.07480842, -0.07722299,
+                                      -0.07963756, -0.08205214, -0.08446671, -0.08688128, -0.08929585, -0.09171043, -0.09412500,
+                                      -0.09653957, -0.09895414, -0.10136871)
+
+
+z1_est_smoothed_exclude0_expected <- c(-0.008793305, -0.013221677, -0.017650050, -0.022078422, -0.026506794, -0.030935167, -0.035363539, -0.039791912,
+                              -0.044220284, -0.048648656, -0.053077029, -0.057505401, -0.061933773, -0.066362146, -0.070790518, -0.075218891,
+                              -0.079647263, -0.084075635, -0.088504008, -0.092932380, -0.097360752, -0.101789125, -0.106217497, -0.110645870,
+                              -0.115074242)
+
 z0_est_nonsmoothed_expected <- c(0.10929112,  0.23990904,  0.78571503, -0.32424609,  0.69298737,  0.29323273,  0.17205791, -0.32695050, -0.46813946,
                                0.81456876,  0.22910089, -0.25499925, -0.86210545,  0.36676885, -0.08063944,  0.11322842,  0.14744050, -1.24314532,
                                0.01132552, -0.03306652, -0.40103043,  0.70248373,  0.07574034,  0.05158158, -1.14718357)
@@ -46,6 +62,9 @@ z1_est_smoothed_stacked_expected <- c(-0.06778918, -0.08330174, -0.09932255, -0.
                                     -0.20083078, -0.21509877, -0.23066335, -0.24618546, -0.26124938, -0.27665898, -0.29106801, -0.30585401, -0.32150058,
                                     -0.33572864, -0.35058111, -0.36454954, -0.37886082, -0.39383506, -0.40864561, -0.42365818)
 
+z0_est_smoothed_stacked_exclude_expected <- c(-0.2181225, -0.3055538, -0.3970309, -0.4862567)
+z1_est_smoothed_stacked_exclude_expected <- c(-0.1586327, -0.2461855, -0.3357286, -0.4236582)
+
 z0_est_smoothed_stacked_binary_expected <- c(0.4894086, 0.4880697, 0.4866323, 0.4851527, 0.4837887, 0.4821243, 0.4805734, 0.4792522, 0.4779863, 0.4763626, 0.4750723,
                                            0.4736508, 0.4722858, 0.4707543, 0.4692018, 0.4674474, 0.4661334, 0.4646176, 0.4627687, 0.4614534, 0.4599904, 0.4586890,
                                            0.4577687, 0.4562335, 0.4542698)
@@ -64,6 +83,19 @@ test_that("time-smoothed ipw gives correct point estimates", {
 
   expect_equal(res_smoothed$est[, 'Z=0'], z0_est_smoothed_expected, tolerance = 1e-7)
   expect_equal(res_smoothed$est[, 'Z=1'], z1_est_smoothed_expected, tolerance = 1e-7)
+})
+
+test_that("time-smoothed ipw gives correct point estimates when excluding baseline outcome", {
+  res_smoothed_exclude <- ipw(data = data_null_processed,
+                      time_smoothed = TRUE,
+                      A_model = A ~ L + Z,
+                      R_model_numerator = R ~ L_baseline + Z,
+                      R_model_denominator = R ~ L + A + Z,
+                      Y_model = Y ~ L_baseline * (time + Z),
+                      include_baseline_outcome = FALSE)
+
+  expect_equal(res_smoothed_exclude$est[, 'Z=0'], z0_est_smoothed_exclude_expected, tolerance = 1e-7)
+  expect_equal(res_smoothed_exclude$est[, 'Z=1'], z1_est_smoothed_exclude_expected, tolerance = 1e-7)
 })
 
 test_that("time-smoothed ipw gives the same result for limited outcome times", {
@@ -137,6 +169,21 @@ test_that("time-smoothed, stacked ipw gives correct point estimates", {
 
   expect_equal(res_smoothed_stacked$est[, 'Z=0'], z0_est_smoothed_stacked_expected, tolerance = 1e-6)
   expect_equal(res_smoothed_stacked$est[, 'Z=1'], z1_est_smoothed_stacked_expected, tolerance = 1e-6)
+})
+
+test_that("time-smoothed, stacked ipw gives correct point estimates when excluding baseline outcome", {
+  res_smoothed_stacked_exclude <- ipw(data = data_null_deaths_processed,
+                              time_smoothed = TRUE,
+                              outcome_times = c(6, 12, 18, 24),
+                              smoothing_method = 'stacked',
+                              A_model = A ~ L + Z,
+                              R_model_numerator = R ~ L_baseline + Z,
+                              R_model_denominator = R ~ L + A + Z,
+                              Y_model = Y ~ L_baseline * (time + Z),
+                              include_baseline_outcome = TRUE)
+
+  expect_equal(res_smoothed_stacked_exclude$est[, 'Z=0'], z0_est_smoothed_stacked_exclude_expected, tolerance = 1e-6)
+  expect_equal(res_smoothed_stacked_exclude$est[, 'Z=1'], z1_est_smoothed_stacked_exclude_expected, tolerance = 1e-6)
 })
 
 test_that("time-smoothed, stacked ipw gives correct point estimates (binary outcome)", {

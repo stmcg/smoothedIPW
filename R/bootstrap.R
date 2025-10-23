@@ -91,6 +91,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
                           R_model_denominator = ipw_res$args$R_model_denominator,
                           Y_model = ipw_res$args$Y_model,
                           truncation_percentile = ipw_res$args$truncation_percentile,
+                          include_baseline_outcome = ipw_res$args$include_baseline_outcome,
                           return_model_fits = FALSE,
                           return_weights = FALSE,
                           trim_returned_models = TRUE)

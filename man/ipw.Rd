@@ -14,6 +14,7 @@ ipw(
   R_model_denominator,
   Y_model,
   truncation_percentile = NULL,
+  include_baseline_outcome = TRUE,
   return_model_fits = TRUE,
   return_weights = TRUE,
   trim_returned_models = FALSE
@@ -26,7 +27,7 @@ ipw(
 
 \item{smoothing_method}{Character string specify the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.}
 
-\item{outcome_times}{Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability. The default is all time points in \code{data}.}
+\item{outcome_times}{Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability}
 
 \item{A_model}{Model statement for the treatment variable}
 
@@ -37,6 +38,8 @@ ipw(
 \item{Y_model}{Model statement for the outcome variable}
 
 \item{truncation_percentile}{Numerical scalar specifying the percentile by which to truncated the IP weights}
+
+\item{include_baseline_outcome}{Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. The default is \code{TRUE}.}
 
 \item{return_model_fits}{Logical scalar specifying whether to include the fitted models in the output}
 
@@ -98,6 +101,16 @@ Otherwise, the \code{R_model_denominator_eligible} is fit on all records on the 
 Users must specify model statements for the treatment (\code{A_model}), outcome measurement (\code{R_model_numerator} and \code{R_model_denominator}), and outcome variable (\code{Y_model}). The package uses pooled-over-time generalized linear models that are fit over the relevant time points (see "Formating \code{data}"), where logistic regression is used for binary variables and linear regression is used for continuous variables.
 
 For stabilized weights, the outcome measurement model \code{R_model_numerator} should \strong{only} include baseline covariates, treatment initiated \code{Z}, and \code{time} as predictors. It must not include time-varying covariates as predictors. The outcome model \code{Y_model} should also only depend on baseline covariates, treatment initiated \code{Z}, and \code{time} (if using time smoothing).
+
+\strong{A note on the outcome definition at baseline}
+
+In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accomodate such settings in two ways:
+\enumerate{
+\item Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should set \code{include_baseline_outcome} to \code{FALSE}.
+\item Users can specify the value of \eqn{Y_{t+1}} (rather than \eqn{Y_t}) in the column \code{Y} in the input data set \code{data} in rows corresponding to time \eqn{t}. That is, the value supplied for \code{Y} in the input data set \code{data} at time 0 is \eqn{Y_1}. In this case, users should set \code{include_baseline_outcome} to \code{TRUE}. Users should also set \code{outcome_times} accordingly.
+}
+
+Note that these two approaches involve different assumptions. For example, the first approach allows the outcome at time \eqn{t} to depend on time-varying covariates up to and including time \eqn{t}, whereas the second approach only allows the outcome at time \eqn{t} to depend on covariates up to and including time \eqn{t-1}.
 }
 \examples{
 

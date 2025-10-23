@@ -5,12 +5,13 @@
 #' @param data Data table (or data frame) containing the observed data. See "Details".
 #' @param time_smoothed Logical scalar specifying whether the time-smoothed or non-smoothed IPW method is applied. The default is \code{TRUE}, i.e., the time-smoothed IPW method.
 #' @param smoothing_method Character string specify the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
-#' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability. The default is all time points in \code{data}.
+#' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability
 #' @param A_model Model statement for the treatment variable
 #' @param R_model_numerator (Optional) Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
 #' @param R_model_denominator Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights
 #' @param Y_model Model statement for the outcome variable
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncated the IP weights
+#' @param include_baseline_outcome Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. The default is \code{TRUE}.
 #' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output
 #' @param return_weights Logical scalar specifying whether to return the estimated inverse probability weights
 #' @param trim_returned_models Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed data set is large. By default, this argument is set to \code{FALSE}.
@@ -67,6 +68,15 @@
 #'
 #' For stabilized weights, the outcome measurement model \code{R_model_numerator} should \strong{only} include baseline covariates, treatment initiated \code{Z}, and \code{time} as predictors. It must not include time-varying covariates as predictors. The outcome model \code{Y_model} should also only depend on baseline covariates, treatment initiated \code{Z}, and \code{time} (if using time smoothing).
 #'
+#' \strong{A note on the outcome definition at baseline}
+#'
+#' In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accomodate such settings in two ways:
+#'
+#' 1. Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should set \code{include_baseline_outcome} to \code{FALSE}.
+#'
+#' 2. Users can specify the value of \eqn{Y_{t+1}} (rather than \eqn{Y_t}) in the column \code{Y} in the input data set \code{data} in rows corresponding to time \eqn{t}. That is, the value supplied for \code{Y} in the input data set \code{data} at time 0 is \eqn{Y_1}. In this case, users should set \code{include_baseline_outcome} to \code{TRUE}. Users should also set \code{outcome_times} accordingly.
+#'
+#' Note that these two approaches involve different assumptions. For example, the first approach allows the outcome at time \eqn{t} to depend on time-varying covariates up to and including time \eqn{t}, whereas the second approach only allows the outcome at time \eqn{t} to depend on covariates up to and including time \eqn{t-1}.
 #'
 #' @references
 #' McGrath S, Kawahara T, Petimar J, Rifas-Shiman SL, Díaz I, Block JP, Young JG. (2025). Time-smoothed inverse probability weighted estimation of effects of generalized time-varying treatment strategies on repeated outcomes truncated by death. arXiv e-prints arXiv:2509.13971.
@@ -125,6 +135,7 @@ ipw <- function(data,
                 R_model_denominator,
                 Y_model,
                 truncation_percentile = NULL,
+                include_baseline_outcome = TRUE,
                 return_model_fits = TRUE,
                 return_weights = TRUE,
                 trim_returned_models = FALSE){
@@ -255,10 +266,17 @@ ipw <- function(data,
 
   # Set parameters
   if (missing(outcome_times)){
-    outcome_times <- 0:max(data$time)
+    if (include_baseline_outcome){
+      outcome_times <- 0:max(data$time)
+    } else {
+      outcome_times <- 1:max(data$time)
+    }
   } else {
     if (!all(outcome_times %in% 0:max(data$time))){
       stop("All values in 'outcome_times' must be no greater than the maximum time interval in 'data' and no less than 0.")
+    }
+    if (!include_baseline_outcome & (0 %in% outcome_times)){
+      stop("outcome_times cannot include 0 if include_baseline_outcome is set to FALSE.")
     }
   }
   any_deaths <- 'D' %in% colnames(data)
@@ -282,6 +300,7 @@ ipw <- function(data,
                       R_model_denominator = R_model_denominator,
                       Y_model = Y_model,
                       truncation_percentile = truncation_percentile,
+                      include_baseline_outcome = include_baseline_outcome,
                       return_model_fits = return_model_fits,
                       return_weights = return_weights,
                       trim_returned_models = trim_returned_models,
@@ -317,6 +336,7 @@ ipw <- function(data,
                                R_model_denominator = R_model_denominator,
                                Y_model = Y_model,
                                truncation_percentile = truncation_percentile,
+                               include_baseline_outcome = include_baseline_outcome,
                                return_model_fits = return_model_fits,
                                return_weights = return_weights,
                                trim_returned_models = trim_returned_models,
@@ -362,6 +382,7 @@ ipw <- function(data,
                                  R_model_denominator = R_model_denominator,
                                  Y_model = Y_model,
                                  truncation_percentile = truncation_percentile,
+                                 include_baseline_outcome = include_baseline_outcome,
                                  return_model_fits = return_model_fits,
                                  return_weights = return_weights,
                                  trim_returned_models = trim_returned_models,
@@ -388,7 +409,12 @@ ipw <- function(data,
         }
 
         # Step 1: Created stacked data set with weights
-        for (j in 0:max(data$time)){
+        if (include_baseline_outcome){
+          start_val <- 0
+        } else {
+          start_val <- 1
+        }
+        for (j in start_val:max(data$time)){
           newdata <- data[data$time <= j,]
           ids_to_keep <- newdata[newdata$time == j & newdata$D == 0, ]$id
           newdata <- newdata[newdata$id %in% ids_to_keep, ]
@@ -401,6 +427,7 @@ ipw <- function(data,
                                 R_model_denominator = R_model_denominator,
                                 Y_model = Y_model,
                                 truncation_percentile = truncation_percentile,
+                                include_baseline_outcome = include_baseline_outcome,
                                 return_model_fits = return_model_fits,
                                 return_weights = return_weights,
                                 only_compute_weights = TRUE,
@@ -410,7 +437,7 @@ ipw <- function(data,
           if (return_model_fits){
             model_fits[[j + 1]] <- res_temp$model_fits
           }
-          if (j == 0){
+          if (j == start_val){
             dat_stacked <- df_stack
           } else {
             dat_stacked <- rbind(dat_stacked, df_stack)
@@ -477,6 +504,7 @@ ipw <- function(data,
                smoothing_method = smoothing_method,
                outcome_times = outcome_times,
                truncation_percentile = truncation_percentile,
+               include_baseline_outcome = include_baseline_outcome,
                A_model = A_model,
                R_model_numerator = R_model_numerator,
                R_model_denominator = R_model_denominator,
@@ -497,11 +525,18 @@ ipw_helper <- function(data,
                 R_model_denominator,
                 Y_model,
                 truncation_percentile = NULL,
+                include_baseline_outcome,
                 return_model_fits = TRUE,
                 return_weights = TRUE,
                 only_compute_weights = FALSE,
                 trim_returned_models,
                 outcome_type){
+
+  if (include_baseline_outcome){
+    min_time <- 0
+  } else {
+    min_time <- 1
+  }
 
   time_points <- length(outcome_times)
 
@@ -534,7 +569,7 @@ ipw_helper <- function(data,
 
   # Measurement model (denominator) and weights
   fit_R_denominator <- tryCatch(
-    stats::glm(R_model_denominator, family = 'binomial', data = data[data$R_model_denominator_eligible == 1,]),
+    stats::glm(R_model_denominator, family = 'binomial', data = data[(data$R_model_denominator_eligible == 1) & (data$time >= min_time), ]),
     error = function(e) {
       error_message_fit <<- paste0("Error in fitting the model for R (denominator): ", conditionMessage(e))
       NULL
@@ -543,7 +578,14 @@ ipw_helper <- function(data,
   if (!is.null(error_message_fit)) {
     stop(error_message_fit)
   }
-  prob_R1_denominator <- stats::predict(fit_R_denominator, type = 'response', newdata = data_censored)
+  if (include_baseline_outcome){
+    prob_R1_denominator <- stats::predict(fit_R_denominator, type = 'response', newdata = data_censored)
+  } else {
+    prob_R1_denominator <- rep(1, times = nrow(data_censored)) # Dummy values that will be overridden
+    my_ind <- data_censored$time != 0
+    prob_R1_denominator[my_ind] <- stats::predict(fit_R_denominator, type = 'response',
+                                                  newdata = data_censored[my_ind, ])
+  }
   if (!return_model_fits){
     fit_R_denominator <- NULL
   } else {
@@ -553,7 +595,7 @@ ipw_helper <- function(data,
   # Measurement model (numerator) and weights
   if (!is.null(R_model_numerator)){
     fit_R_numerator <- tryCatch(
-      stats::glm(R_model_numerator, family = 'binomial', data = data),
+      stats::glm(R_model_numerator, family = 'binomial', data = data[data$time >= min_time, ]),
       error = function(e) {
         error_message_fit <<- paste0("Error in fitting the model for R (numerator): ", conditionMessage(e))
         NULL
@@ -566,7 +608,14 @@ ipw_helper <- function(data,
     fit_R_numerator <- NULL
   }
   if (!is.null(R_model_numerator)){
-    prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = data_censored)
+    if (include_baseline_outcome){
+      prob_R1_numerator <- stats::predict(fit_R_numerator, type = 'response', newdata = data_censored)
+    } else {
+      prob_R1_numerator <- rep(1, times = nrow(data_censored)) # Dummy values that will be overridden
+      my_ind <- data_censored$time != 0
+      prob_R1_numerator[my_ind] <- stats::predict(fit_R_numerator, type = 'response',
+                                                    newdata = data_censored[my_ind, ])
+    }
     if (!return_model_fits){
       fit_R_numerator <- NULL
     } else {
@@ -579,6 +628,10 @@ ipw_helper <- function(data,
   # Compute IP weights based on censored data set
   weights_A <- unname(unlist(tapply(1 / prob_A1, data_censored$id, FUN = cumprod)))
   weights_R <- ifelse(data_censored$R == 1, prob_R1_numerator / prob_R1_denominator, 0)
+  if (!include_baseline_outcome){
+    weights_A[data_censored$time == 0] <-
+      weights_R[data_censored$time == 0] <- 0
+  }
   data_censored$weights <- weights_A * weights_R
   if (return_weights){
     data_censored$weights_A <- weights_A
@@ -599,7 +652,7 @@ ipw_helper <- function(data,
 
   # Truncate IP weights, if applicable
   if (!is.null(truncation_percentile)){
-    trunc_val <- stats::quantile(data_censored$weights, probs = truncation_percentile)
+    trunc_val <- stats::quantile(data_censored[data_censored$time >= min_time]$weights, probs = truncation_percentile)
     data_censored$weights <- pmin(data_censored$weights, trunc_val)
   }
 

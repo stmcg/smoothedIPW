@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/stmcg/smoothedIPW/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/stmcg/smoothedIPW/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/stmcg/smoothedIPW/graph/badge.svg)](https://app.codecov.io/gh/stmcg/smoothedIPW)
 <!-- badges: end -->
 
 The `smoothedIPW` package implements methods to estimate effects of generalized time-varying treatment strategies on the mean of an outcome at one or more selected follow-up times of interest. The package allows for treatment strategies with the following components:

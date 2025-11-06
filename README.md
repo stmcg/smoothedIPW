@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/stmcg/smoothedIPW/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/stmcg/smoothedIPW/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/stmcg/smoothedIPW/graph/badge.svg)](https://app.codecov.io/gh/stmcg/smoothedIPW)
 <!-- badges: end -->
 
 The `smoothedIPW` package implements methods to estimate effects of

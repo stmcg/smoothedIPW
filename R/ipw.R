@@ -70,7 +70,7 @@
 #'
 #' \strong{A note on the outcome definition at baseline}
 #'
-#' In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accomodate such settings in two ways:
+#' In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accommodate such settings in two ways:
 #'
 #' 1. Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should set \code{include_baseline_outcome} to \code{FALSE}.
 #'

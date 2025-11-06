@@ -104,7 +104,7 @@ For stabilized weights, the outcome measurement model \code{R_model_numerator} s
 
 \strong{A note on the outcome definition at baseline}
 
-In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accomodate such settings in two ways:
+In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accommodate such settings in two ways:
 \enumerate{
 \item Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should set \code{include_baseline_outcome} to \code{FALSE}.
 \item Users can specify the value of \eqn{Y_{t+1}} (rather than \eqn{Y_t}) in the column \code{Y} in the input data set \code{data} in rows corresponding to time \eqn{t}. That is, the value supplied for \code{Y} in the input data set \code{data} at time 0 is \eqn{Y_1}. In this case, users should set \code{include_baseline_outcome} to \code{TRUE}. Users should also set \code{outcome_times} accordingly.

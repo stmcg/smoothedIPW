@@ -164,7 +164,7 @@ data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_le
 
 ###### Point estimation
 
-When deaths are present, we can choose between two different time-smoothing methods: the nonstacked method and stacked method. Users can specify the smoothing method by the `smoothing_method` argument (options: `'nonstacked'` and `'stacked'`) in the `ipw` function. 
+When deaths are present, we can choose between two different time-smoothing methods: the nonstacked method and stacked method. Users can specify the smoothing method by the `smoothing_method` argument (options: `'nonstacked'` and `'stacked'`) in the `ipw` function.
 
 ```{r}
 res_est_deaths <- ipw(data = data_null_deaths_processed,

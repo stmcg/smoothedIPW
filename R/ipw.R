@@ -510,7 +510,7 @@ ipw <- function(data,
                R_model_denominator = R_model_denominator,
                Y_model = Y_model)
   out <- list(est = est, model_fits = model_fits, data_weights = data_weights,
-              outcome_type = outcome_type, args = args)
+              outcome_type = outcome_type, args = args, any_deaths = any_deaths)
   class(out) <- 'ipw'
   return(out)
 }

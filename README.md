@@ -222,8 +222,18 @@ follow-up time of interest ($t^*$) is given below.
 
 ``` r
 res_est
-#> INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME MEAN 
 #> 
+#> =======================================================================
+#>   Point Estimates: Counterfactual Outcome Mean
+#> =======================================================================
+#> 
+#> Settings:
+#> -----------------------------------------------------------------------
+#>   Method: Time-smoothed IPW
+#>   Outcome times: 6, 12, 18, 24
+#> 
+#> Estimates:
+#> -----------------------------------------------------------------------
 #>  time          Z=0         Z=1
 #>     6  0.007124865 -0.03536354
 #>    12 -0.019445369 -0.06193377
@@ -321,8 +331,18 @@ follow-up time of interest is given below.
 
 ``` r
 res_est_deaths
-#> INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME MEAN 
 #> 
+#> =======================================================================
+#>   Point Estimates: Counterfactual Outcome Mean
+#> =======================================================================
+#> 
+#> Settings:
+#> -----------------------------------------------------------------------
+#>   Method: Time-smoothed IPW (nonstacked)
+#>   Outcome times: 6, 12, 18, 24
+#> 
+#> Estimates:
+#> -----------------------------------------------------------------------
 #>  time         Z=0        Z=1
 #>     6  0.03219486 -0.2047087
 #>    12 -0.33221811 -0.3572665

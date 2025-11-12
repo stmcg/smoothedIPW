@@ -26,10 +26,39 @@ print.ipw <- function(x, ...) {
     stop("Argument 'x' must be an object of class \"ipw\".")
   }
 
+  # Header
+  cat("\n")
+  cat("=======================================================================\n")
   if (x$outcome_type == 'continuous'){
-    cat('INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME MEAN \n\n')
+    cat("  Point Estimates: Counterfactual Outcome Mean\n")
   } else if (x$outcome_type == 'binary'){
-    cat('INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME PROBABILITY \n\n')
+    cat("  Point Estimates: Counterfactual Outcome Probability\n")
   }
+  cat("=======================================================================\n")
+  cat("\n")
+
+  # Key settings
+  if (!x$args$time_smoothed){
+    method_full <- "Non-smoothed IPW"
+  } else {
+    if (x$any_deaths & (x$args$smoothing_method %in% c('nonstacked', 'stacked'))){
+      method_full <- paste("Time-smoothed IPW (", x$args$smoothing_method, ")", sep = "")
+    } else {
+      method_full <- "Time-smoothed IPW"
+    }
+  }
+  cat("Settings:\n")
+  cat("-----------------------------------------------------------------------\n")
+  cat("  Method: ", method_full, "\n", sep = "")
+  cat("  Outcome times: ", paste(x$args$outcome_times, collapse = ", "), "\n", sep = "")
+  if (!is.null(x$args$truncation_percentile)){
+    cat("  Weight truncation: ", round(x$args$truncation_percentile * 100, 1), "th percentile\n", sep = "")
+  }
+  cat("\n")
+
+  # Estimates table
+  cat("Estimates:\n")
+  cat("-----------------------------------------------------------------------\n")
   print(x$est, row.names = FALSE)
+  cat("\n")
 }

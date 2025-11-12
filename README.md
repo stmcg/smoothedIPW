@@ -10,6 +10,16 @@
 coverage](https://codecov.io/gh/stmcg/smoothedIPW/graph/badge.svg)](https://app.codecov.io/gh/stmcg/smoothedIPW)
 <!-- badges: end -->
 
+## Table of Contents
+
+- [Description](#description)
+- [Installation](#installation)
+- [Example 1: No Deaths](#example-1-no-deaths)
+- [Example 2: With Deaths](#example-2-with-deaths)
+- [Citation](#citation)
+
+## Description
+
 The `smoothedIPW` package implements methods to estimate effects of
 generalized time-varying treatment strategies on the mean of an outcome
 at one or more selected follow-up times of interest. The package allows
@@ -31,8 +41,8 @@ probability weighted (IPW) methods described in [McGrath et
 al. (2025)](https://doi.org/10.48550/arXiv.2509.13971). Time-smoothing
 refers to using outcome measurements at intermediate time-points in
 order to gain precision. In settings with truncation by death, two
-different type of approaches for time-smoothing are available (i.e., the
-stacked and nonstacked methods), which rely on different model
+different types of approaches for time-smoothing are available (i.e.,
+the stacked and nonstacked methods), which rely on different model
 assumptions. Further details are given in [McGrath et
 al. (2025)](https://doi.org/10.48550/arXiv.2509.13971).
 
@@ -46,7 +56,7 @@ You can install the development version of `smoothedIPW` from
 devtools::install_github("stmcg/smoothedIPW")
 ```
 
-## Example
+## Example 1: No Deaths
 
 We first load the package.
 
@@ -245,4 +255,121 @@ res_ci$res_boot
 #> [2,]   12 -0.06193377 -0.2137749 0.02011806
 #> [3,]   18 -0.08850401 -0.2910591 0.03815230
 #> [4,]   24 -0.11507424 -0.4132964 0.06315579
+```
+
+## Example 2: With Deaths
+
+We next consider an example where some participants die during
+follow-up. We consider the same treatment strategies as in the first
+example.
+
+#### Data Set
+
+We use the example data set `data_null_deaths`, which is similar to
+`data_null` but includes deaths during follow-up. This results in fewer
+total observations (21,713 vs 25,000) because individuals who die have
+no records after their death time. The data set contains an additional
+column:
+
+- `D`: Indicator of whether death occurred at that time point
+
+The rows of `data_null_deaths` for one individual who died at time 5 are
+shown below:
+
+``` r
+data_null_deaths[id == 229,]
+#>       id  time     L     Z     A     R          Y     D
+#>    <num> <int> <int> <int> <num> <int>      <num> <num>
+#> 1:   229     0     0     0     1     1  1.1909383     0
+#> 2:   229     1     1     0     1     0         NA     0
+#> 3:   229     2     1     0     1     1 -4.1643505     0
+#> 4:   229     3     0     0     1     0         NA     0
+#> 5:   229     4     1     0     1     1 -0.3198526     0
+#> 6:   229     5     1     0     1     1 -4.6564868     0
+```
+
+#### Applying IPW
+
+###### Preparing the data set
+
+We prepare the data set in the same way as before using `prep_data`:
+
+``` r
+data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_length = 2, baseline_vars = 'L')
+```
+
+###### Point estimation
+
+When deaths are present, we can choose between two different
+time-smoothing methods: the nonstacked method and stacked method. Users
+can specify the smoothing method by the `smoothing_method` argument
+(options: `'nonstacked'` and `'stacked'`) in the `ipw` function.
+
+``` r
+res_est_deaths <- ipw(data = data_null_deaths_processed,
+                      time_smoothed = TRUE,
+                      smoothing_method = 'nonstacked',
+                      outcome_times = c(6, 12, 18, 24),
+                      A_model = A ~ L + Z,
+                      R_model_denominator = R ~ L + A + Z,
+                      R_model_numerator = R ~ L_baseline + Z,
+                      Y_model = Y ~ L_baseline * (time + Z))
+```
+
+The estimated counterfactual outcome mean for each medication at each
+follow-up time of interest is given below.
+
+``` r
+res_est_deaths
+#> INVERSE PROBABILITY WEIGHTED ESTIMATES OF THE COUNTERFACTUAL OUTCOME MEAN 
+#> 
+#>  time        Z=0        Z=1
+#>     6 -0.1476215 -0.0338191
+#>    12  0.2201022  0.2710408
+#>    18 -0.5242326 -0.5573434
+#>    24 -0.5159927 -0.3907974
+```
+
+###### Interval estimation
+
+Confidence intervals can be obtained using bootstrap in the same way as
+in the case without deaths:
+
+``` r
+set.seed(1234)
+res_ci_deaths <- get_CI(res_est_deaths, data = data_null_deaths_processed, n_boot = 10)
+res_ci_deaths$res_boot
+#> $`0`
+#>      Time   Estimate   CI Lower   CI Upper
+#> [1,]    6 -0.1476215 -0.2528253  0.2122506
+#> [2,]   12  0.2201022 -0.2100783  0.4677592
+#> [3,]   18 -0.5242326 -0.9130049 -0.3779896
+#> [4,]   24 -0.5159927 -0.8460976 -0.4550237
+#> 
+#> $`1`
+#>      Time   Estimate    CI Lower   CI Upper
+#> [1,]    6 -0.0338191 -0.19948373  0.3726383
+#> [2,]   12  0.2710408 -0.08200753  0.5652776
+#> [3,]   18 -0.5573434 -1.12381241 -0.1944689
+#> [4,]   24 -0.3907974 -0.69044668 -0.3808500
+```
+
+## Citation
+
+If you use `smoothedIPW` in your research, please cite:
+
+McGrath S, Kawahara T, Petimar J, Rifas-Shiman SL, Díaz I, Block JP,
+Young JG. (2025). Time-smoothed inverse probability weighted estimation
+of effects of generalized time-varying treatment strategies on repeated
+outcomes truncated by death. arXiv preprint arXiv:2509.13971.
+
+BibTeX entry:
+
+``` bibtex
+@article{mcgrath2025time,
+  title={Time-smoothed inverse probability weighted estimation of effects of generalized time-varying treatment strategies on repeated outcomes truncated by death},
+  author={McGrath, Sean and Kawahara, Takuya and Petimar, Joshua and Rifas-Shiman, Sheryl L and D{\'\i}az, Iv{\'a}n and Block, Jason P and Young, Jessica G},
+  journal={arXiv preprint arXiv:2509.13971},
+  year={2025}
+}
 ```

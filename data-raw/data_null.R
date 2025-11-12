@@ -56,10 +56,10 @@ datagen_with_deaths <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, 
 
   # Baseline
   U <- runif(1, min = U_lb, max = U_ub)
-  D[1] <- 0
   L[1] <- rbinom(1, 1, expit(beta_L[1] + beta_L[4] * U))
   Z[1:(time_points + 1)] <- rbinom(1, 1, expit(beta_Z[1] + beta_Z[2] * L[1]))
   A[1] <- 1
+  D[1] <- 0
   R[1] <- rbinom(1, 1, expit(beta_R[1] + beta_R[2] * A[1] + beta_R[3] * Z[1] + beta_R[4] * L[1]))
   if (R[1] == 1){
     if (outcome_type == 'continuous'){
@@ -74,12 +74,12 @@ datagen_with_deaths <- function(i, time_points, beta_L, beta_Z, beta_A, beta_R, 
 
   # Follow-up times
   for (j in 2:(time_points + 1)){
+    L[j] <- rbinom(1, 1, expit(beta_L[1] + beta_L[2] * A[j-1] + beta_L[3] * Z[1] + beta_L[4] * U + beta_L[5] * (j - 1)))
+    A[j] <- rbinom(1, 1, expit(beta_A[1] + beta_A[2] * A[j-1] +  beta_A[3] * Z[1] + beta_A[4] * L[j] + beta_A[5] * (j - 1)))
     D[j] <- rbinom(1, 1, expit(beta_D[1] + beta_D[2] * U))
     if (D[j] == 1){
       break
     }
-    L[j] <- rbinom(1, 1, expit(beta_L[1] + beta_L[2] * A[j-1] + beta_L[3] * Z[1] + beta_L[4] * U + beta_L[5] * (j - 1)))
-    A[j] <- rbinom(1, 1, expit(beta_A[1] + beta_A[2] * A[j-1] +  beta_A[3] * Z[1] + beta_A[4] * L[j] + beta_A[5] * (j - 1)))
     R[j] <- rbinom(1, 1, expit(beta_R[1] + beta_R[2] * A[j] + beta_R[3] * Z[1] + beta_R[4] * L[j]))
     if (R[j] == 1){
       if (outcome_type == 'continuous'){

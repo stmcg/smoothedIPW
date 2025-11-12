@@ -149,7 +149,7 @@ We use the example data set `data_null_deaths`, which is similar to `data_null` 
 The rows of `data_null_deaths` for one individual who died at time 5 are shown below:
 
 ```{r}
-data_null_deaths[id == 229,]
+data_null_deaths[id == 151,]
 ```
 
 #### Applying IPW

@@ -10,10 +10,16 @@
 #' @param contrast_type Character string specifying the type of contrast. The options are \code{"difference"} (for the difference of means/probabilities) and \code{"ratio"} (for the ratio of means/probabilities).
 #' @param show_progress Logical scalar specifying whether to show a progress bar.
 #'
-#' @return A list that includes the following components:
+#' @return An object of class "ipw_ci". This object is a list that includes the following components:
 #' \item{res_boot}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z}.}
 #' \item{res_boot_contrast}{A list where each component corresponds to a different medication \eqn{z} level. Each component of the list is a data frame containing the estimates and confidence intervals for the contrast (difference or ratio) counterfactual outcome mean/probability under the treatment regime indexed by \eqn{z} compared to the counterfactual outcome mean/probability under the treatment regime indexed by the reference value.}
 #' \item{res_boot_all}{A three dimensional array containing all the bootstrap replicates. The first dimension corresponds to the bootstrap replicate; The second dimension corresponds to the time interval; The third dimension corresponds to the medication \eqn{z} level.}
+#' \item{outcome_type}{Character string indicating whether the outcome is "continuous" or "binary".}
+#' \item{outcome_times}{Numeric vector of outcome times.}
+#' \item{n_boot}{Number of bootstrap replicates used.}
+#' \item{conf_level}{Confidence level used.}
+#' \item{reference_z_value}{Reference value of Z used for contrasts.}
+#' \item{contrast_type}{Type of contrast ("difference" or "ratio").}
 #'
 #' @details
 #' Additional description of the method
@@ -154,8 +160,32 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
     res_boot[[j]] <- res_boot_single
   }
   names(res_boot) <- names(res_boot_contrast) <- z_levels
-  return(list(res_boot = res_boot, res_boot_contrast = res_boot_contrast,
-              res_boot_all = res_boot_all))
+  
+  # Determine method label for settings section
+  if (!ipw_res$args$time_smoothed){
+    method_full <- "Non-smoothed IPW"
+  } else {
+    if (ipw_res$any_deaths & (ipw_res$args$smoothing_method %in% c('nonstacked', 'stacked'))){
+      method_full <- paste("Time-smoothed IPW (", ipw_res$args$smoothing_method, ")", sep = "")
+    } else {
+      method_full <- "Time-smoothed IPW"
+    }
+  }
+  
+  # Create S3 object
+  out <- list(res_boot = res_boot, 
+              res_boot_contrast = res_boot_contrast,
+              res_boot_all = res_boot_all,
+              outcome_type = ipw_res$outcome_type,
+              outcome_times = outcome_times,
+              method = method_full,
+              truncation_percentile = ipw_res$args$truncation_percentile,
+              n_boot = n_boot,
+              conf_level = conf_level,
+              reference_z_value = reference_z_value,
+              contrast_type = contrast_type)
+  class(out) <- 'ipw_ci'
+  return(out)
 }
 
 #' @import data.table

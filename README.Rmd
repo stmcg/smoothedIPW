@@ -134,7 +134,7 @@ To obtain 95\% confidence intervals around our estimates, we can apply the `get_
 ```{r}
 set.seed(1234)
 res_ci <- get_CI(res_est, data = data_null_processed, n_boot = 10)
-res_ci$res_boot
+res_ci
 ```
 ## Example 2: With Deaths
 
@@ -191,7 +191,7 @@ Confidence intervals can be obtained using bootstrap in the same way as in the c
 ```{r}
 set.seed(1234)
 res_ci_deaths <- get_CI(res_est_deaths, data = data_null_deaths_processed, n_boot = 10)
-res_ci_deaths$res_boot
+res_ci_deaths
 ```
 
 ## Citation

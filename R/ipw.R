@@ -561,7 +561,11 @@ ipw_helper <- function(data,
   } else {
     fit_A <- NULL
   }
-  prob_A1 <- ifelse(data_censored$A_model_eligible == 1, stats::predict(fit_A, type = 'response', newdata = data_censored), 1)
+  prob_A1 <- rep(1, times = nrow(data_censored)) # Dummy values that will be overridden
+  if (fit_model_A){
+    eligible_indices <- data_censored$A_model_eligible == 1
+    prob_A1[eligible_indices] <- stats::predict(fit_A, type = 'response', newdata = data_censored[eligible_indices, ])
+  }
   if (!return_model_fits){
     fit_A <- NULL
   } else {

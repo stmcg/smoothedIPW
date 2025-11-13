@@ -434,6 +434,7 @@ ipw <- function(data,
                                 trim_returned_models = trim_returned_models,
                                 outcome_type = outcome_type)
           df_stack <- res_temp$df_stack
+          df_stack <- df_stack[df_stack$time == j, ]
           if (return_model_fits){
             model_fits[[j + 1]] <- res_temp$model_fits
           }

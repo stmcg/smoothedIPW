@@ -65,14 +65,16 @@ library(smoothedIPW)
 ```
 
 We will estimate the effect of treatment strategies with the following
-three components: \* Initiate medication $z$ ($z \in \{0, 1\}$) at
-baseline \* Adhere to medication $z$ throughout the follow up, allowing
-for a grace period of 2 months \* Ensure an outcome measurement at the
-follow-up time of interest
+three components:
+
+- Initiate medication $z$ ($z \in \{0, 1\}$) at baseline
+- Adhere to medication $z$ throughout the follow-up, allowing for a
+  grace period of 2 months
+- Ensure an outcome measurement at the follow-up time of interest
 
 We consider the follow-up time of interest to be $t^*$,
 $t^* \in \{6, 12, 18, 24\}$. In this example, we consider that there are
-no deaths over the study period. See the package help files for examples
+no deaths over the study period. The second example considers a setting
 with deaths over the study period.
 
 #### Data Set

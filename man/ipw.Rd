@@ -25,7 +25,7 @@ ipw(
 
 \item{time_smoothed}{Logical scalar specifying whether the time-smoothed or non-smoothed IPW method is applied. The default is \code{TRUE}, i.e., the time-smoothed IPW method.}
 
-\item{smoothing_method}{Character string specify the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.}
+\item{smoothing_method}{Character string specifying the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.}
 
 \item{outcome_times}{Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability}
 
@@ -37,7 +37,7 @@ ipw(
 
 \item{Y_model}{Model statement for the outcome variable}
 
-\item{truncation_percentile}{Numerical scalar specifying the percentile by which to truncated the IP weights}
+\item{truncation_percentile}{Numerical scalar specifying the percentile by which to truncate the IP weights}
 
 \item{include_baseline_outcome}{Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. The default is \code{TRUE}.}
 
@@ -48,11 +48,11 @@ ipw(
 \item{trim_returned_models}{Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed data set is large. By default, this argument is set to \code{FALSE}.}
 }
 \value{
-A object of class "ipw". This object is a list that includes the following components:
+An object of class "ipw". This object is a list that includes the following components:
 \item{est}{A data frame containing the counterfactual mean/probability estimates for each medication at each time interval.}
 \item{model_fits}{A list containing the fitted models for the treatment, outcome measurement, and outcome (if \code{return_model_fits} is set to \code{TRUE}).
-If the nonstacked time-smoothed appraoch is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
-If the stacked time-smoothed approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for to the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
+If the nonstacked time-smoothed approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the \eqn{i}th outcome time in \code{outcome_times}.
+If the stacked time-smoothed approach is used, the \eqn{i}th element in \code{model_fits} is a list of fitted models for the outcome time \eqn{i+1} in the data set \code{data}. The last element in \code{model_fits} contains the fitted outcome model.}
 \item{data_weights}{(A list containing) the artificially censored data set with columns for the estimated weights. The column \code{"weights"} contains the (final) inverse probability weight, and the columns \code{"weights_A"} and \code{"weights_R"} contain the inverse probability weights for treatment and outcome measurement, respectively.
 If no deaths are present in the data, this object will be a data frame.
 If deaths are present in the data and either the non-smoothed IPW method is applied or the time-smoothed non-stacked IPW method is applied, this object will be a list of length \code{length(outcome_times)} where each element corresponds to the artificially censored data set for each outcome time in \code{outcome_times}.
@@ -71,9 +71,9 @@ Users can estimate effects of treatment strategies with the following components
 \item Follow a user-specified time-varying adherence protocol for treatment \eqn{z}
 \item Ensure an outcome measurement at the follow-up time of interest.
 }
-The time-varying adherence protocol is specified by indicating in \code{data} when an individual deviates from their adherence protocol. The function \code{\link{prep_data}} facilitates this step. See also "Formating \code{data}".
+The time-varying adherence protocol is specified by indicating in \code{data} when an individual deviates from their adherence protocol. The function \code{\link{prep_data}} facilitates this step. See also "Formatting \code{data}".
 
-\strong{Formating \code{data}}
+\strong{Formatting \code{data}}
 
 The input data set \code{data} must be a data table (or data frame) in a "long" format, where each row represents one time interval for one individual. The data frame should contain the following columns:
 \itemize{
@@ -98,7 +98,7 @@ Otherwise, the \code{R_model_denominator_eligible} is fit on all records on the 
 
 \strong{Specifying the models}
 
-Users must specify model statements for the treatment (\code{A_model}), outcome measurement (\code{R_model_numerator} and \code{R_model_denominator}), and outcome variable (\code{Y_model}). The package uses pooled-over-time generalized linear models that are fit over the relevant time points (see "Formating \code{data}"), where logistic regression is used for binary variables and linear regression is used for continuous variables.
+Users must specify model statements for the treatment (\code{A_model}), outcome measurement (\code{R_model_numerator} and \code{R_model_denominator}), and outcome variable (\code{Y_model}). The package uses pooled-over-time generalized linear models that are fit over the relevant time points (see "Formatting \code{data}"), where logistic regression is used for binary variables and linear regression is used for continuous variables.
 
 For stabilized weights, the outcome measurement model \code{R_model_numerator} should \strong{only} include baseline covariates, treatment initiated \code{Z}, and \code{time} as predictors. It must not include time-varying covariates as predictors. The outcome model \code{Y_model} should also only depend on baseline covariates, treatment initiated \code{Z}, and \code{time} (if using time smoothing).
 

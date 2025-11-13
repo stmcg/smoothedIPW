@@ -45,7 +45,7 @@ An object of class "ipw_ci". This object is a list that includes the following c
 This function applies nonparametric bootstrap to construct confidence intervals around the counterfactual mean/probability estimates obtained by \code{\link{ipw}}.
 }
 \details{
-Additional description of the method
+This function applies nonparametric bootstrap resampling to construct confidence intervals around the counterfactual mean/probability estimates obtained by \code{\link{ipw}}. Bootstrap confidence intervals are constructed by resampling individuals (with replacement) from the original data set, applying the \code{ipw} function to each bootstrap sample, and computing percentile-based confidence intervals from the distribution of bootstrap estimates.
 }
 \examples{
 \donttest{

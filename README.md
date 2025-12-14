@@ -136,35 +136,25 @@ These columns can be added by the `prep_data` function, as shown below:
 ``` r
 data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
-data_null_processed[id == 2,]
-#>        id  time     L     Z     A     R           Y A_model_eligible
-#>     <num> <int> <int> <int> <num> <int>       <num>            <num>
-#>  1:     2     0     1     0     1     1  -6.8964763                0
-#>  2:     2     1     1     0     1     0          NA                0
-#>  3:     2     2     1     0     1     1 -10.3900416                0
-#>  4:     2     3     1     0     1     0          NA                0
-#>  5:     2     4     1     0     1     0          NA                0
-#>  6:     2     5     1     0     1     0          NA                0
-#>  7:     2     6     1     0     0     0          NA                0
-#>  8:     2     7     0     0     0     1  -4.2866350                0
-#>  9:     2     8     1     0     0     1  11.3850700                1
-#> 10:     2     9     0     0     1     0          NA                0
-#> 11:     2    10     1     0     1     0          NA                0
-#> 12:     2    11     0     0     1     0          NA                0
-#> 13:     2    12     1     0     0     0          NA                0
-#> 14:     2    13     1     0     1     0          NA                0
-#> 15:     2    14     0     0     1     1  -3.6372290                0
-#> 16:     2    15     1     0     1     1  -0.5293098                0
-#> 17:     2    16     0     0     1     0          NA                0
-#> 18:     2    17     1     0     0     0          NA                0
-#> 19:     2    18     1     0     1     1  -2.9451809                0
-#> 20:     2    19     1     0     1     0          NA                0
-#> 21:     2    20     1     0     1     0          NA                0
-#> 22:     2    21     1     0     1     1  -3.6248307                0
-#> 23:     2    22     0     0     1     0          NA                0
-#> 24:     2    23     1     0     1     0          NA                0
-#> 25:     2    24     0     0     1     0          NA                0
-#>        id  time     L     Z     A     R           Y A_model_eligible
+```
+
+To see this, let us inspect the processed dataset for individual
+`id = 2` in the first 10 time intervals:
+
+``` r
+data_null_processed[id == 2 & time < 10]
+#>        id  time     L     Z     A     R          Y A_model_eligible
+#>     <num> <int> <int> <int> <num> <int>      <num>            <num>
+#>  1:     2     0     1     0     1     1  -6.896476                0
+#>  2:     2     1     1     0     1     0         NA                0
+#>  3:     2     2     1     0     1     1 -10.390042                0
+#>  4:     2     3     1     0     1     0         NA                0
+#>  5:     2     4     1     0     1     0         NA                0
+#>  6:     2     5     1     0     1     0         NA                0
+#>  7:     2     6     1     0     0     0         NA                0
+#>  8:     2     7     0     0     0     1  -4.286635                0
+#>  9:     2     8     1     0     0     1  11.385070                1
+#> 10:     2     9     0     0     1     0         NA                0
 #>     C_artificial L_baseline
 #>            <num>      <int>
 #>  1:            0          1
@@ -177,23 +167,14 @@ data_null_processed[id == 2,]
 #>  8:            0          1
 #>  9:            1          1
 #> 10:            1          1
-#> 11:            1          1
-#> 12:            1          1
-#> 13:            1          1
-#> 14:            1          1
-#> 15:            1          1
-#> 16:            1          1
-#> 17:            1          1
-#> 18:            1          1
-#> 19:            1          1
-#> 20:            1          1
-#> 21:            1          1
-#> 22:            1          1
-#> 23:            1          1
-#> 24:            1          1
-#> 25:            1          1
-#>     C_artificial L_baseline
 ```
+
+Observe that `A_model_eligible` becomes 1 when `time = 8` because the
+individual is at the end of their grace period (i.e., has already went
+two consecutive intervals without adhering to the mediation);
+`C_artificial` switches to 1 in this time interval because the
+individual did not adhere to the mediation in this interval (the end of
+their grace period), thus violating the treatment strategy of interest.
 
 ###### Point estimation
 

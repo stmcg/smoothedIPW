@@ -98,9 +98,12 @@ These columns can be added by the `prep_data` function, as shown below:
 ```{r}
 data_null_processed <- prep_data(data = data_null, grace_period_length = 2,
                                  baseline_vars = 'L')
-data_null_processed[id == 2,]
 ```
-
+To see this, let us inspect the processed dataset for individual `id = 2` in the first 10 time intervals:
+```{r}
+data_null_processed[id == 2 & time < 10]
+```
+Observe that `A_model_eligible` becomes 1 when `time = 8` because the individual is at the end of their grace period (i.e., has already went two consecutive intervals without adhering to the mediation); `C_artificial` switches to 1 in this time interval because the individual did not adhere to the mediation in this interval (the end of their grace period), thus violating the treatment strategy of interest.
 
 ###### Point estimation
 

@@ -31,19 +31,19 @@ ipw(
 
 \item{A_model}{Model statement for the treatment variable}
 
-\item{R_model_numerator}{(Optional) Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights}
+\item{R_model_numerator}{(Optional) Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights. The default is \code{NULL}, i.e., a numerator of 1 is used in the IP weights.}
 
 \item{R_model_denominator}{Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights}
 
 \item{Y_model}{Model statement for the outcome variable}
 
-\item{truncation_percentile}{Numerical scalar specifying the percentile by which to truncate the IP weights}
+\item{truncation_percentile}{Numerical scalar specifying the percentile by which to truncate the IP weights. The default is \code{NULL}, i.e., no truncation.}
 
 \item{include_baseline_outcome}{Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. The default is \code{TRUE}.}
 
-\item{return_model_fits}{Logical scalar specifying whether to include the fitted models in the output}
+\item{return_model_fits}{Logical scalar specifying whether to include the fitted models in the output. The default is \code{TRUE}.}
 
-\item{return_weights}{Logical scalar specifying whether to return the estimated inverse probability weights}
+\item{return_weights}{Logical scalar specifying whether to return the estimated inverse probability weights. The default is \code{TRUE}.}
 
 \item{trim_returned_models}{Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed data set is large. By default, this argument is set to \code{FALSE}.}
 }
@@ -78,7 +78,7 @@ The time-varying adherence protocol is specified by indicating in \code{data} wh
 The input data set \code{data} must be a data table (or data frame) in a "long" format, where each row represents one time interval for one individual. The data frame should contain the following columns:
 \itemize{
 \item \code{id}: A unique identifier for each participant.
-\item \code{time}: The follow-up time index (e.g., 0, 1, 2, ...).
+\item \code{time}: The follow-up time index, starting from 0 and increasing in increments of 1 in consecutive rows.
 \item Covariate columns: One or more columns for baseline and time-varying covariates.
 \item \code{Z}: The treatment initiated at baseline.
 \item \code{A}: An indicator for adherence to the treatment protocol at each time point.

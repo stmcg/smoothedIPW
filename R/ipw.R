@@ -7,13 +7,13 @@
 #' @param smoothing_method Character string specifying the time-smoothed IPW method when there are deaths present. The options include \code{"nonstacked"} and \code{"stacked"}. The default is \code{"nonstacked"}.
 #' @param outcome_times Numeric vector specifying the follow-up time(s) of interest for the counterfactual outcome mean/probability
 #' @param A_model Model statement for the treatment variable
-#' @param R_model_numerator (Optional) Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights
+#' @param R_model_numerator (Optional) Model statement for the indicator variable for the measurement of the outcome variable, used in the numerator of the IP weights. The default is \code{NULL}, i.e., a numerator of 1 is used in the IP weights.
 #' @param R_model_denominator Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights
 #' @param Y_model Model statement for the outcome variable
-#' @param truncation_percentile Numerical scalar specifying the percentile by which to truncate the IP weights
+#' @param truncation_percentile Numerical scalar specifying the percentile by which to truncate the IP weights. The default is \code{NULL}, i.e., no truncation.
 #' @param include_baseline_outcome Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. The default is \code{TRUE}.
-#' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output
-#' @param return_weights Logical scalar specifying whether to return the estimated inverse probability weights
+#' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output. The default is \code{TRUE}.
+#' @param return_weights Logical scalar specifying whether to return the estimated inverse probability weights. The default is \code{TRUE}.
 #' @param trim_returned_models Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed data set is large. By default, this argument is set to \code{FALSE}.
 #'
 #' @return An object of class "ipw". This object is a list that includes the following components:
@@ -44,7 +44,7 @@
 #' The input data set \code{data} must be a data table (or data frame) in a "long" format, where each row represents one time interval for one individual. The data frame should contain the following columns:
 #' \itemize{
 #'   \item \code{id}: A unique identifier for each participant.
-#'   \item \code{time}: The follow-up time index (e.g., 0, 1, 2, ...).
+#'   \item \code{time}: The follow-up time index, starting from 0 and increasing in increments of 1 in consecutive rows.
 #'   \item Covariate columns: One or more columns for baseline and time-varying covariates.
 #'   \item \code{Z}: The treatment initiated at baseline.
 #'   \item \code{A}: An indicator for adherence to the treatment protocol at each time point.

@@ -124,7 +124,7 @@ res <- ipw(data = data_null_processed,
            R_model_numerator = R ~ L_baseline + Z,
            R_model_denominator = R ~ L + A + Z,
            Y_model = Y ~ L_baseline * (time + Z))
-res$est
+res
 
 ## Time-smoothed IPW with deaths, nonstacked smoothing method (continuous outcome)
 data_null_deaths_processed <- prep_data(data = data_null_deaths, grace_period_length = 2,
@@ -137,7 +137,7 @@ res <- ipw(data = data_null_deaths_processed,
            R_model_numerator = R ~ L_baseline + Z,
            R_model_denominator = R ~ L + A + Z,
            Y_model = Y ~ L_baseline * (time + Z))
-res$est
+res
 
 ## Time-smoothed IPW with deaths, stacked smoothing method (binary outcome)
 \donttest{

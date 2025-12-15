@@ -37,7 +37,7 @@
 #'                R_model_denominator = R ~ L + A + Z,
 #'                Y_model = Y ~ L_baseline * (time + Z))
 #' res_ci <- get_CI(ipw_res = res_est, data = data_null_processed, n_boot = 10)
-#' res_ci$res_boot
+#' res_ci
 #' }
 #'
 #'
@@ -160,7 +160,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
     res_boot[[j]] <- res_boot_single
   }
   names(res_boot) <- names(res_boot_contrast) <- z_levels
-  
+
   # Determine method label for settings section
   if (!ipw_res$args$time_smoothed){
     method_full <- "Non-smoothed IPW"
@@ -171,9 +171,9 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
       method_full <- "Time-smoothed IPW"
     }
   }
-  
+
   # Create S3 object
-  out <- list(res_boot = res_boot, 
+  out <- list(res_boot = res_boot,
               res_boot_contrast = res_boot_contrast,
               res_boot_all = res_boot_all,
               outcome_type = ipw_res$outcome_type,

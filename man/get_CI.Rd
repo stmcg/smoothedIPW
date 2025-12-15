@@ -60,7 +60,7 @@ res_est <- ipw(data = data_null_processed,
                R_model_denominator = R ~ L + A + Z,
                Y_model = Y ~ L_baseline * (time + Z))
 res_ci <- get_CI(ipw_res = res_est, data = data_null_processed, n_boot = 10)
-res_ci$res_boot
+res_ci
 }
 
 

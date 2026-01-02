@@ -106,7 +106,7 @@ get_CI <- function(ipw_res, data, n_boot, conf_level = 0.95,
       }
     },
     error = function(e){
-      warning(paste0('An error occured in bootstrap replicate ', i,
+      warning(paste0('An error occurred in bootstrap replicate ', i,
                      '. Bootstrap confidence intervals will be constructed excluding estimates from this bootstrap replicate.
                      The error message encountered is:\n', e))
     })

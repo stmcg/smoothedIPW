@@ -154,7 +154,7 @@ ipw <- function(data,
   }
   if (!is.null(truncation_percentile)){
     if (truncation_percentile < 0 | truncation_percentile > 1){
-      stop('The argument truncation_percentile must be beween 0 and 1')
+      stop('The argument truncation_percentile must be between 0 and 1')
     }
   }
   if (!'time' %in% colnames(data)){

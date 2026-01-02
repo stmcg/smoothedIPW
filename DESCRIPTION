@@ -30,7 +30,7 @@ Imports: data.table,
 Depends: 
     R (>= 2.10)
 LazyData: true
-BugReports: https://github.com/stmcg/smoothedIPW
+BugReports: https://github.com/stmcg/smoothedIPW/issues
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

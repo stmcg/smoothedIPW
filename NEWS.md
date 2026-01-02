@@ -1,3 +1,3 @@
-### pooledipw version 0.1.0 (TBD)
+### smoothedIPW version 0.1.0 (TBD)
 
-* First version released on GitHub (https://github.com/stmcg/pooledipw)
+* First version released on GitHub (https://github.com/stmcg/smoothedIPW)

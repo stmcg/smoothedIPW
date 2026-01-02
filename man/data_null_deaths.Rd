@@ -14,7 +14,7 @@ A data table with 21,713 rows and 8 variables:
 \item{A}{Binary indicator of adhering to medication initiated at baseline.}
 \item{R}{Indicator if the outcome of interest is measured.}
 \item{Y}{Continuous outcome of interest.}
-\item{D}{Indicator if death occured.}
+\item{D}{Indicator if death occurred.}
 }
 }
 \usage{

@@ -14,7 +14,7 @@ ipw(
   R_model_denominator,
   Y_model,
   truncation_percentile = NULL,
-  include_baseline_outcome = TRUE,
+  include_baseline_outcome,
   return_model_fits = TRUE,
   return_weights = TRUE,
   trim_returned_models = FALSE
@@ -39,7 +39,7 @@ ipw(
 
 \item{truncation_percentile}{Numerical scalar specifying the percentile by which to truncate the IP weights. The default is \code{NULL}, i.e., no truncation.}
 
-\item{include_baseline_outcome}{Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. The default is \code{TRUE}.}
+\item{include_baseline_outcome}{Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. By default, this argument is set to \code{TRUE} if \code{data} has any non-missing outcome values in the time interval indexed by 0 and is otherwise set to \code{FALSE}.}
 
 \item{return_model_fits}{Logical scalar specifying whether to include the fitted models in the output. The default is \code{TRUE}.}
 
@@ -106,8 +106,8 @@ For stabilized weights, the outcome measurement model \code{R_model_numerator} s
 
 In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accommodate such settings in two ways:
 \enumerate{
-\item Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should set \code{include_baseline_outcome} to \code{FALSE}.
-\item Users can specify the value of \eqn{Y_{t+1}} (rather than \eqn{Y_t}) in the column \code{Y} in the input data set \code{data} in rows corresponding to time \eqn{t}. That is, the value supplied for \code{Y} in the input data set \code{data} at time 0 is \eqn{Y_1}. In this case, users should set \code{include_baseline_outcome} to \code{TRUE}. Users should also set \code{outcome_times} accordingly.
+\item Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should ensure that \code{include_baseline_outcome} is set to \code{FALSE}.
+\item Users can specify the value of \eqn{Y_{t+1}} (rather than \eqn{Y_t}) in the column \code{Y} in the input data set \code{data} in rows corresponding to time \eqn{t}. That is, the value supplied for \code{Y} in the input data set \code{data} at time 0 is \eqn{Y_1}. In this case, users should ensure that \code{include_baseline_outcome} is set to \code{TRUE}. Users should also set \code{outcome_times} accordingly.
 }
 
 Note that these two approaches involve different assumptions. For example, the first approach allows the outcome at time \eqn{t} to depend on time-varying covariates up to and including time \eqn{t}, whereas the second approach only allows the outcome at time \eqn{t} to depend on covariates up to and including time \eqn{t-1}.

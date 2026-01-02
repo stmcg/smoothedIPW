@@ -11,7 +11,7 @@
 #' @param R_model_denominator Model statement for the indicator variable for the measurement of the outcome variable, used in the denominator of the IP weights
 #' @param Y_model Model statement for the outcome variable
 #' @param truncation_percentile Numerical scalar specifying the percentile by which to truncate the IP weights. The default is \code{NULL}, i.e., no truncation.
-#' @param include_baseline_outcome Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. The default is \code{TRUE}.
+#' @param include_baseline_outcome Logical scalar indicating whether to include the time interval indexed by 0 in fitting the time-smoothed outcome model and outcome measurement models. By default, this argument is set to \code{TRUE} if \code{data} has any non-missing outcome values in the time interval indexed by 0 and is otherwise set to \code{FALSE}.
 #' @param return_model_fits Logical scalar specifying whether to include the fitted models in the output. The default is \code{TRUE}.
 #' @param return_weights Logical scalar specifying whether to return the estimated inverse probability weights. The default is \code{TRUE}.
 #' @param trim_returned_models Logical scalar specifying whether to only return the estimated coefficients (and corresponding standard errors, z scores, and p-values) of the fitted models (e.g., treatment model) rather than the full fitted model objects. This reduces the size of the object returned by the \code{ipw} function when \code{return_model_fits} is set to \code{TRUE}, especially when the observed data set is large. By default, this argument is set to \code{FALSE}.
@@ -72,9 +72,9 @@
 #'
 #' In some settings, the outcome may not be defined in the baseline time interval. The \code{ipw} function can accommodate such settings in two ways:
 #'
-#' 1. Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should set \code{include_baseline_outcome} to \code{FALSE}.
+#' 1. Users can set a value of \code{NA} in the column \code{Y} in the input data set \code{data} in rows corresponding to time 0. In this case, users should ensure that \code{include_baseline_outcome} is set to \code{FALSE}.
 #'
-#' 2. Users can specify the value of \eqn{Y_{t+1}} (rather than \eqn{Y_t}) in the column \code{Y} in the input data set \code{data} in rows corresponding to time \eqn{t}. That is, the value supplied for \code{Y} in the input data set \code{data} at time 0 is \eqn{Y_1}. In this case, users should set \code{include_baseline_outcome} to \code{TRUE}. Users should also set \code{outcome_times} accordingly.
+#' 2. Users can specify the value of \eqn{Y_{t+1}} (rather than \eqn{Y_t}) in the column \code{Y} in the input data set \code{data} in rows corresponding to time \eqn{t}. That is, the value supplied for \code{Y} in the input data set \code{data} at time 0 is \eqn{Y_1}. In this case, users should ensure that \code{include_baseline_outcome} is set to \code{TRUE}. Users should also set \code{outcome_times} accordingly.
 #'
 #' Note that these two approaches involve different assumptions. For example, the first approach allows the outcome at time \eqn{t} to depend on time-varying covariates up to and including time \eqn{t}, whereas the second approach only allows the outcome at time \eqn{t} to depend on covariates up to and including time \eqn{t-1}.
 #'
@@ -135,7 +135,7 @@ ipw <- function(data,
                 R_model_denominator,
                 Y_model,
                 truncation_percentile = NULL,
-                include_baseline_outcome = TRUE,
+                include_baseline_outcome,
                 return_model_fits = TRUE,
                 return_weights = TRUE,
                 trim_returned_models = FALSE){
@@ -265,6 +265,9 @@ ipw <- function(data,
   }
 
   # Set parameters
+  if (missing(include_baseline_outcome)){
+    include_baseline_outcome <- any(!is.na(data[data$time == 0, ]$Y))
+  }
   if (missing(outcome_times)){
     if (include_baseline_outcome){
       outcome_times <- 0:max(data$time)
